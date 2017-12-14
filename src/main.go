@@ -18,6 +18,10 @@ type Config struct {
 	TelegramBotToken string
 	OwnName          string
 }
+type MainTable struct {
+	OrderByElapsedTime []OrderByElapsedTime
+	CompleteListOfSQLText []CompleteListOfSQLText
+}
 
 // SQL ordered by Elapsed Time
 type OrderByElapsedTime struct{
@@ -42,6 +46,20 @@ type worker interface{
 	sqlAnalyzer()
 }
 
+func readFile(name string) (string, error)  {
+	var body string	// all text awr html
+	fi, err := os.Open(name) // open file for read
+	if err != nil{
+		return "", err
+	}
+	defer fi.Close()
+
+	scanner := bufio.NewScanner(fi)
+	for scanner.Scan() {	// read all html into body
+		body += scanner.Text() + "\n"
+	}
+	return body, nil
+}
 // TODO парсер лога и запись его в структуры
 func parser()  {
 
@@ -99,7 +117,7 @@ func main() {
 	defer f.Close()
 
 	// assign it to the standard logger
-	//log.SetOutput(f) // TODO config logs
+	log.SetOutput(f) // TODO config logs
 	log.SetPrefix("AWRcompar ")
 
 	// read config file
@@ -108,19 +126,6 @@ func main() {
 
 	log.Println("Start work.")
 
-	fi, err := os.Open("awr/global_awr_report_111755_111758.html") // открывает файл для чтения
-	if err != nil{
-		log.Fatal(err)
-	}
-	defer fi.Close() // закрывает файл при выходе из функции main
+	readFile("aw1r/global_awr_report_111755_111758.html")
 
-	scanner := bufio.NewScanner(fi)
-	scanner.Scan() // считывает следующий токен
-
-	for scanner.Scan() {
-		if scanner.Text() == `<h3 class="awr">SQL ordered by Elapsed Time</h3>` {
-			log.Println(scanner.Text())
-		}
-
-	}
 }

@@ -1,22 +1,4 @@
-package main
-import (
-	"testing"
-	//"errors"
-)
-
-// TODO coverage = 100%
-
-func TestParser(t *testing.T) {
-	t.Parallel()
-
-	type testPair struct {
-		input string
-		text string
-		error error
-	}
-
-	var tests = []testPair{
-		{"test/test.html", `<meta http-equiv="content-type" content="text/html; charset=UTF-8"><html lang="en"><head><title>AWR Report for DB: ZP, Inst: k10szp_1, Snaps: 111755-111758</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><html lang="en"><head><title>AWR Report for DB: ZP, Inst: k10szp_1, Snaps: 111755-111758</title>
     <style type="text/css">
         body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
         pre.awr  {font:8pt Courier;color:black; background:White;}
@@ -72,28 +54,8 @@ func TestParser(t *testing.T) {
 <a class="exa" href="#CELL_TOPDB">Back to Exadata Top Database Consumers</a>
 <br/>
 <a class="exa" href="#CELL_STATISTICS">Back to Exadata Statistics</a>
-</body>
 </div>
 <br /><a class="awr" href="#top">Back to Top</a><p />
 <p />
 End of Report
 </body></html>
-`, nil},
-	//	{"fdsfsdf", "", errors.New(" open fdsfsdf: The system cannot find the file specified. ")},
-	}
-
-	//readFile()
-
-	for _, pair := range tests {
-		v, err := readFile(pair.input)
-		if (v != pair.text) || (err != pair.error)  {
-			t.Error(
-				"For", pair.input,
-				"\n expected:", pair.text,
-				"\n got text:", v,
-				"\n got err:|", err, "|",
-			)
-		}
-	}
-
-}
