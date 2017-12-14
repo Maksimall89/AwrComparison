@@ -12,10 +12,34 @@ import (
 	"os"
 	"encoding/json"
 	"time"
+	"bufio"
 )
 type Config struct {
 	TelegramBotToken string
 	OwnName          string
+}
+
+// SQL ordered by Elapsed Time
+type OrderByElapsedTime struct{
+	ElapsedTime			float32
+	Executions			float32
+	ElapsedTimePerExec	float32
+	Total				float32
+	Cpu					float32
+	IO					float32
+	SQLID				string
+	SQLModule			string
+	SQLText				string
+}
+
+//Complete List of SQL Text
+type CompleteListOfSQLText struct{
+	SQLID		string
+	SQLText		string
+}
+type worker interface{
+	tableAnalyzer()
+	sqlAnalyzer()
 }
 
 // TODO парсер лога и запись его в структуры
@@ -36,7 +60,6 @@ func sqlAnalyzer()  {
 func server()  {
 
 }
-
 
 func (conf *Config) init() {
 	//init configuration
@@ -74,7 +97,6 @@ func main() {
 		log.Fatalf("Error opening file: %v", err)
 	}
 	defer f.Close()
-	defer log.Println(recover())
 
 	// assign it to the standard logger
 	//log.SetOutput(f) // TODO config logs
@@ -86,7 +108,19 @@ func main() {
 
 	log.Println("Start work.")
 
+	fi, err := os.Open("awr/global_awr_report_111755_111758.html") // открывает файл для чтения
+	if err != nil{
+		log.Fatal(err)
+	}
+	defer fi.Close() // закрывает файл при выходе из функции main
 
+	scanner := bufio.NewScanner(fi)
+	scanner.Scan() // считывает следующий токен
 
+	for scanner.Scan() {
+		if scanner.Text() == `<h3 class="awr">SQL ordered by Elapsed Time</h3>` {
+			log.Println(scanner.Text())
+		}
 
+	}
 }

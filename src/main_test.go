@@ -5,7 +5,7 @@ import (
 
 // TODO coverage = 100%
 
-func TestReplaceTag(t *testing.T) {
+func TestParser(t *testing.T) {
 	t.Parallel()
 /*
 	type testPair struct {
