@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+
+        html, body {
+            background-color: aqua;
+        }
+        .root {
+            width: 700px;
+            margin: 0 auto;
+        }
+        .item {
+            padding:  20px 40px;
+            border-radius: 3px;
+            background-color: #ffffff;
+        }
+        .important {
+            border: 1px solid #cc0000;
+        }
+        .title {
+            display: inline-block;
+        }
+        .done {
+            border: none;
+            color: #dddddd;
+            background-color: #f7f7f7;
+        }
+        .form {
+            display: inline;
+        }
+        .button {
+            display:  inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="root">
+        {{range $index, $value := .}} <!-- cycle -->
+            <div class="item{{if eq .Done true}} done{{end}}"> <!-- if else -->
+                <div class="title">{{.Name}}</div>
+                {{if IsNotDone .}}
+                    <form action="/" method="post" class="form">
+                        <input type="hidden" name="id" value="{{$index}}" />
+                        <button type="submit" class="button">Done</button>
+                    </form>
+                {{end}}
+            </div>
+        {{end}}
+    </div>
+</body>
+</html>
