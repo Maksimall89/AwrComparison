@@ -1,7 +1,6 @@
 package main
 import (
 	"testing"
-	//"errors"
 )
 
 // TODO coverage = 100%
@@ -72,14 +71,13 @@ func TestParser(t *testing.T) {
 <a class="exa" href="#CELL_TOPDB">Back to Exadata Top Database Consumers</a>
 <br/>
 <a class="exa" href="#CELL_STATISTICS">Back to Exadata Statistics</a>
-</body>
 </div>
 <br /><a class="awr" href="#top">Back to Top</a><p />
 <p />
 End of Report
 </body></html>
 `, nil},
-	//	{"fdsfsdf", "", errors.New(" open fdsfsdf: The system cannot find the file specified. ")},
+	//	{"fdsfsdf", "", errors.New(` open fdsfsdf: The system cannot find the file specified. `)},
 	}
 
 	//readFile()
@@ -91,7 +89,7 @@ End of Report
 				"For", pair.input,
 				"\n expected:", pair.text,
 				"\n got text:", v,
-				"\n got err:|", err, "|",
+				"\n got err:", err,
 			)
 		}
 	}

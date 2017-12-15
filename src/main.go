@@ -1,6 +1,6 @@
 package main
 /*
-	Документация:
+	Doc:
 	http://nonfunctionaltestingtools.blogspot.ru/2015/04/steps-to-analyze-awr-report-in-oracle.html
 	https://habrahabr.ru/post/189574/
 	http://www.sql.ru/blogs/oracleandsql/2097
@@ -14,11 +14,15 @@ import (
 	"time"
 	"bufio"
 )
+
+const configFileName  = "config.json"
+
 type Config struct {
 	TelegramBotToken string
 	OwnName          string
 }
 type MainTable struct {
+	body 	string
 	OrderByElapsedTime []OrderByElapsedTime
 	CompleteListOfSQLText []CompleteListOfSQLText
 }
@@ -36,7 +40,7 @@ type OrderByElapsedTime struct{
 	SQLText				string
 }
 
-//Complete List of SQL Text
+// Complete List of SQL Text
 type CompleteListOfSQLText struct{
 	SQLID		string
 	SQLText		string
@@ -45,7 +49,7 @@ type worker interface{
 	tableAnalyzer()
 	sqlAnalyzer()
 }
-
+// reading text from a file
 func readFile(name string) (string, error)  {
 	var body string	// all text awr html
 	fi, err := os.Open(name) // open file for read
@@ -56,12 +60,14 @@ func readFile(name string) (string, error)  {
 
 	scanner := bufio.NewScanner(fi)
 	for scanner.Scan() {	// read all html into body
-		body += scanner.Text() + "\n"
+		body += scanner.Text() // + "\n"
 	}
 	return body, nil
 }
 // TODO парсер лога и запись его в структуры
-func parser()  {
+func (conf *MainTable) parser()  {
+	// reg, _ = regexp.MatchString(`<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>`, string(body)) true
+	// s := regexp.MustCompile(``<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>``).FindStringSubmatch(string(body))
 
 }
 
@@ -73,23 +79,24 @@ func tableAnalyzer(){
 func sqlAnalyzer()  {
 
 }
-
 // TODO web-server с загрузкой лога через веб морду и выводом информации по логу на экран
 func server()  {
 
 }
-
 func (conf *Config) init() {
 	//init configuration
 	configuration := Config{}
-	file, err := os.Open("config.json")
+	// open config-file
+	file, err := os.Open("configFileName")
+	defer file.Close()
 
 	if err != nil {
 		log.Println(err)
+		// default configuration
 		configuration.OwnName = "Maksimall89"
 		configuration.TelegramBotToken = "3257"
 	}else{
-		defer file.Close()
+
 		decoder := json.NewDecoder(file)
 		err = decoder.Decode(&configuration)
 		if err != nil {
@@ -103,6 +110,7 @@ func main() {
 
 	// configurator for logger
 	var str = "log"	// name folder for logs
+
 	// check what folder log is exist
 	_, err := os.Stat(str)
 	if os.IsNotExist(err) {
@@ -117,7 +125,7 @@ func main() {
 	defer f.Close()
 
 	// assign it to the standard logger
-	log.SetOutput(f) // TODO config logs
+	//log.SetOutput(f) // TODO config logs
 	log.SetPrefix("AWRcompar ")
 
 	// read config file
@@ -126,6 +134,9 @@ func main() {
 
 	log.Println("Start work.")
 
-	readFile("aw1r/global_awr_report_111755_111758.html")
+	work := MainTable{}
+	work.body, _ = readFile("awr/global_awr_report_111755_111758.html")
+	work.parser()
+//	log.Println(str)
 
 }
