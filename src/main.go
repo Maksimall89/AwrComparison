@@ -67,7 +67,7 @@ func readFile(name string) (string, error)  {
 	return body, nil
 }
 // TODO парсер лога и запись его в структуры
-func (conf *MainTable) parser()  {
+func parser(conf *MainTable, maps map[string]string) ()  {
 	//<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>
 	// reg, _ = regexp.MatchString(`<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>`, string(body)) true
 	// s := regexp.MustCompile(``<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>``).FindStringSubmatch(string(body))
@@ -108,9 +108,8 @@ func (conf *Config) init() {
 	}
 	return
 }
-
 // create maps with element
-func createMaps (textInput string, maps map[string]string) error{
+func createMaps(textInput string, maps map[string]string) error{
 	textBody := strings.Split(textInput, `<h3 class="awr">`)
 	for _, text := range  textBody{
 		if reg, _ := regexp.MatchString(`(.*?)</h3>([\D|\d]*)`, string(text)); reg {
@@ -123,6 +122,7 @@ func createMaps (textInput string, maps map[string]string) error{
 	}
 	return nil
 }
+
 func main() {
 
 	// configurator for logger
@@ -166,12 +166,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-
-
-
 	log.Println(maps["SQL ordered by Elapsed Time"])
 
-	work.parser()
+	parser(&work, maps)
+
 //	log.Println(str)
 
 }
