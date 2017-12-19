@@ -15,6 +15,7 @@ import (
 	"bufio"
 	"strings"
 	"regexp"
+	"errors"
 )
 
 const configFileName  = "config.json"
@@ -24,7 +25,6 @@ type Config struct {
 	OwnName          string
 }
 type MainTable struct {
-	body 	string
 	OrderByElapsedTime []OrderByElapsedTime
 	CompleteListOfSQLText []CompleteListOfSQLText
 }
@@ -90,7 +90,7 @@ func (conf *Config) init() {
 	//init configuration
 	configuration := Config{}
 	// open config-file
-	file, err := os.Open("configFileName")
+	file, err := os.Open(configFileName)
 	defer file.Close()
 
 	if err != nil {
@@ -109,6 +109,20 @@ func (conf *Config) init() {
 	return
 }
 
+// create maps with element
+func createMaps (textInput string, maps map[string]string) error{
+	textBody := strings.Split(textInput, `<h3 class="awr">`)
+	for _, text := range  textBody{
+		if reg, _ := regexp.MatchString(`(.*?)</h3>([\D|\d]*)`, string(text)); reg {
+			s := regexp.MustCompile(`(.*?a>)*(.*?)</h3>([\D|\d]+)`).FindStringSubmatch(string(text))
+			maps[s[2]] = s[3]
+		}
+	}
+	if len(maps) == 0{
+		return errors.New("Not found elements map in the AWR")
+	}
+	return nil
+}
 func main() {
 
 	// configurator for logger
@@ -146,15 +160,14 @@ func main() {
 	}
 
 	// create map
-	textBody := strings.Split(body, `<h3 class="awr">`)
 	maps := make(map[string]string)
-
-	for _, text := range  textBody{
-		if reg, _ := regexp.MatchString(`(.*?)<\/h3>([\D|\d]*)`, string(text)); reg {
-			s := regexp.MustCompile(`(.*?a>)*(.*?)<\/h3>([\D|\d]+)`).FindStringSubmatch(string(text))
-			maps[s[2]] = s[3]
-		}
+	err = createMaps(body, maps)
+	if err != nil{
+		log.Fatal(err)
 	}
+
+
+
 
 	log.Println(maps["SQL ordered by Elapsed Time"])
 
