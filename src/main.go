@@ -13,6 +13,8 @@ import (
 	"encoding/json"
 	"time"
 	"bufio"
+	"strings"
+	"regexp"
 )
 
 const configFileName  = "config.json"
@@ -60,12 +62,13 @@ func readFile(name string) (string, error)  {
 
 	scanner := bufio.NewScanner(fi)
 	for scanner.Scan() {	// read all html into body
-		body += scanner.Text() // + "\n"
+		body += scanner.Text() + "\n"
 	}
 	return body, nil
 }
 // TODO парсер лога и запись его в структуры
 func (conf *MainTable) parser()  {
+	//<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>
 	// reg, _ = regexp.MatchString(`<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>`, string(body)) true
 	// s := regexp.MustCompile(``<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>``).FindStringSubmatch(string(body))
 
@@ -135,7 +138,26 @@ func main() {
 	log.Println("Start work.")
 
 	work := MainTable{}
-	work.body, _ = readFile("awr/global_awr_report_111755_111758.html")
+
+	// read file
+	body, err := readFile("awr/global_awr_report_111755_111758.html")
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	// create map
+	textBody := strings.Split(body, `<h3 class="awr">`)
+	maps := make(map[string]string)
+
+	for _, text := range  textBody{
+		if reg, _ := regexp.MatchString(`(.*?)<\/h3>([\D|\d]*)`, string(text)); reg {
+			s := regexp.MustCompile(`(.*?a>)*(.*?)<\/h3>([\D|\d]+)`).FindStringSubmatch(string(text))
+			maps[s[2]] = s[3]
+		}
+	}
+
+	log.Println(maps["SQL ordered by Elapsed Time"])
+
 	work.parser()
 //	log.Println(str)
 
