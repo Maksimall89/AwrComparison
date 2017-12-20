@@ -28,7 +28,6 @@ type MainTable struct {
 	OrderByElapsedTime []OrderByElapsedTime
 	CompleteListOfSQLText []CompleteListOfSQLText
 }
-
 // SQL ordered by Elapsed Time
 type OrderByElapsedTime struct{
 	ElapsedTime			float32
@@ -41,7 +40,6 @@ type OrderByElapsedTime struct{
 	SQLModule			string
 	SQLText				string
 }
-
 // Complete List of SQL Text
 type CompleteListOfSQLText struct{
 	SQLID		string
@@ -68,13 +66,44 @@ func readFile(name string) (string, error)  {
 }
 // TODO парсер лога и запись его в структуры
 func parser(conf *MainTable, maps map[string]string) ()  {
-	//<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>
 	// reg, _ = regexp.MatchString(`<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>`, string(body)) true
 	// s := regexp.MustCompile(``<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>``).FindStringSubmatch(string(body))
+
+	var i int
+
 	if value, ok := maps["Complete List of SQL Text"]; ok {
-		fmt.Println(value)
-		log.Println(value)
+		textBody := regexp.MustCompile(`<a class="awr" name=".+?"><\/a>`).Split(value, -1)	// split line
+		conf.CompleteListOfSQLText = make([]CompleteListOfSQLText, (len(textBody) - 3)) // -3 because last second item not contain information
+		for _, iter := range textBody{
+			strArr := regexp.MustCompile(`(.+?)<\/td><td class='\w+'>(.+?)<\/td>`).FindStringSubmatch(iter) // select item from row
+
+			if len(strArr) == 0 {	// if we can't select to nex line
+				continue
+			}
+			// fill in our struct
+			conf.CompleteListOfSQLText[i].SQLID = strArr[1]
+			conf.CompleteListOfSQLText[i].SQLText = strArr[2]
+			i++
+		}
 	}
+
+	if value, ok := maps["SQL ordered by Elapsed Time"]; ok {
+		log.Println(value)
+		textBody := regexp.MustCompile(`<tr><td align`).Split(value, -1)	// split line
+		conf.OrderByElapsedTime = make([]OrderByElapsedTime, len(textBody)) // -3 because last second item not contain information
+		for _, iter := range textBody{
+			strArr := regexp.MustCompile(`<tr><td align="right" class='\w+'>(.*?)<\/td><td align="right" class='\w+'>(.*?)<\/td><td align="right" class='\w+'>(.*?)<\/td><td align="right" class='\w+'>(.*?)<\/td><td align="right" class='\w+'>(.*?)<\/td><td align="right" class='\w+'>(.*?)<\/td><td scope="row" class='\w+'><a class="awr" href="(.*?)">(.*?)<\/a><\/td><td class='\w+'>(.*?)<\/td><td class='\w+'>(.*?)<\/td><\/tr>`).FindStringSubmatch(iter) // select item from row
+
+			if len(strArr) == 0 {	// if we can't select to nex line
+				continue
+			}
+			// fill in our struct
+			//conf.OrderByElapsedTime[i].ElapsedTime = strArr[1]
+			i++
+		}
+
+	}
+
 }
 
 // TODO анализатор таблиц
@@ -173,10 +202,6 @@ func main() {
 
 	//log.Println(maps["SQL ordered by Elapsed Time"])
 
-
-
 	parser(&work, maps)
-
-
 
 }
