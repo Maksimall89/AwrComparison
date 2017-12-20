@@ -62,7 +62,7 @@ func readFile(name string) (string, error)  {
 
 	scanner := bufio.NewScanner(fi)
 	for scanner.Scan() {	// read all html into body
-		body += scanner.Text() + "\n"
+		body += scanner.Text() //+ "\n"
 	}
 	return body, nil
 }
@@ -71,9 +71,9 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 	//<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>
 	// reg, _ = regexp.MatchString(`<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>`, string(body)) true
 	// s := regexp.MustCompile(``<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>``).FindStringSubmatch(string(body))
-
 	if value, ok := maps["Complete List of SQL Text"]; ok {
 		fmt.Println(value)
+		log.Println(value)
 	}
 }
 
