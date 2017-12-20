@@ -72,6 +72,9 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 	// reg, _ = regexp.MatchString(`<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>`, string(body)) true
 	// s := regexp.MustCompile(``<a class="awr" name=".*?"><\/a>(.*?)<\/td><td class='awrc'>(.*?)<\/td>``).FindStringSubmatch(string(body))
 
+	if value, ok := maps["Complete List of SQL Text"]; ok {
+		fmt.Println(value)
+	}
 }
 
 // TODO анализатор таблиц
@@ -142,7 +145,7 @@ func main() {
 	defer f.Close()
 
 	// assign it to the standard logger
-	//log.SetOutput(f) // TODO config logs
+	log.SetOutput(f) // TODO config logs
 	log.SetPrefix("AWRcompar ")
 
 	// read config file
@@ -166,10 +169,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println(maps["SQL ordered by Elapsed Time"])
+	//log.Println(body)
+
+	//log.Println(maps["SQL ordered by Elapsed Time"])
+
+
 
 	parser(&work, maps)
 
-//	log.Println(str)
+
 
 }

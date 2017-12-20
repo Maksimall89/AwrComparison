@@ -157,7 +157,6 @@ End of Report
 	}
 
 }
-
 func TestCreateMaps(t *testing.T) {
 
 	mapsGood := make(map[string]string)
@@ -183,7 +182,6 @@ func TestCreateMaps(t *testing.T) {
 </table>
 </p>
 `
-
 	v, err := readFile("test/test.html")
 	if err != nil{
 		t.Error(err)
@@ -194,7 +192,6 @@ func TestCreateMaps(t *testing.T) {
 	if err != nil{
 		t.Error(err)
 	}
-
 
 	if mapsGood["Report Summary"] != maps["Report Summary"] && len(maps) != 0  {
 		t.Error(
