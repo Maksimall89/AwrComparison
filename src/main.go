@@ -26,15 +26,15 @@ type Config struct {
 	OwnName          string
 }
 type MainTable struct {
-	OrderByElapsedTime 		[]OrderByElapsedTime
-	CompleteListOfSQLText 	[]CompleteListOfSQLText
-	OrderedByCPUTime		[]OrderedByCPUTime
-	OrderedByUserIOWaitTime	[]OrderedByUserIOWaitTime
-	TopSQLWithTopEvents 	[]TopSQLWithTopEvents
-	TopSQLWithTopRowSources	[]TopSQLWithTopRowSources
+	SQLOrderByElapsedTime      []SQLOrderByElapsedTime
+	CompleteListOfSQLText      []CompleteListOfSQLText
+	SQLOrderedByCPUTime        []SQLOrderedByCPUTime
+	SQLOrderedByUserIOWaitTime []SQLOrderedByUserIOWaitTime
+	TopSQLWithTopEvents        []TopSQLWithTopEvents
+	TopSQLWithTopRowSources    []TopSQLWithTopRowSources
 }
 // SQL ordered by Elapsed Time
-type OrderByElapsedTime struct{
+type SQLOrderByElapsedTime struct{
 	ElapsedTime			float64
 	Executions			float64
 	ElapsedTimePerExec	float64
@@ -46,7 +46,7 @@ type OrderByElapsedTime struct{
 	SQLText				string
 }
 // SQL ordered by CPU Time
-type OrderedByCPUTime struct{
+type SQLOrderedByCPUTime struct{
 	CPUTime				float64
 	Executions			float64
 	CPUPerExec			float64
@@ -59,7 +59,7 @@ type OrderedByCPUTime struct{
 	SQLText				string
 }
 // SQL ordered by User I/O Wait Time
-type OrderedByUserIOWaitTime struct{
+type SQLOrderedByUserIOWaitTime struct{
 	UserIOTime			float64
 	Executions			float64
 	UIOPerExec			float64
@@ -144,8 +144,8 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 	if value, ok := maps["SQL ordered by Elapsed Time"]; ok {
 		i = 0
 		//textBody := regexp.MustCompile(`<tr><td align`).Split(value, -1)	// split line
-		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
-		conf.OrderByElapsedTime = make([]OrderByElapsedTime, (len(textBody) -1))  // -1 because first line not contain information
+		textBody =  strings.Split(value, `<tr><td align="right" `)                     // split line
+		conf.SQLOrderByElapsedTime = make([]SQLOrderByElapsedTime, (len(textBody) -1)) // -1 because first line not contain information
 
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
@@ -154,23 +154,23 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.OrderByElapsedTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.OrderByElapsedTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.OrderByElapsedTime[i].ElapsedTimePerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.OrderByElapsedTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.OrderByElapsedTime[i].Cpu, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.OrderByElapsedTime[i].IO, _ = strconv.ParseFloat(strArr[6], 64)
-			conf.OrderByElapsedTime[i].SQLID = strArr[7]
-			conf.OrderByElapsedTime[i].SQLModule = strArr[8]
-			conf.OrderByElapsedTime[i].SQLText = strArr[9]
+			conf.SQLOrderByElapsedTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[1], 64)
+			conf.SQLOrderByElapsedTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.SQLOrderByElapsedTime[i].ElapsedTimePerExec, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.SQLOrderByElapsedTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.SQLOrderByElapsedTime[i].Cpu, _ = strconv.ParseFloat(strArr[5], 64)
+			conf.SQLOrderByElapsedTime[i].IO, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.SQLOrderByElapsedTime[i].SQLID = strArr[7]
+			conf.SQLOrderByElapsedTime[i].SQLModule = strArr[8]
+			conf.SQLOrderByElapsedTime[i].SQLText = strArr[9]
 			i++
 		}
 	}
 
 	if value, ok := maps["SQL ordered by CPU Time"]; ok {
 		i = 0
-		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
-		conf.OrderedByCPUTime = make([]OrderedByCPUTime, (len(textBody) -1))  // -1 because first line not contain information
+		textBody =  strings.Split(value, `<tr><td align="right" `)                 // split line
+		conf.SQLOrderedByCPUTime = make([]SQLOrderedByCPUTime, (len(textBody) -1)) // -1 because first line not contain information
 
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
@@ -179,24 +179,24 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.OrderedByCPUTime[i].CPUTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.OrderedByCPUTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.OrderedByCPUTime[i].CPUPerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.OrderedByCPUTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.OrderedByCPUTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.OrderedByCPUTime[i].CPU, _ = strconv.ParseFloat(strArr[6], 64)
-			conf.OrderedByCPUTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
-			conf.OrderedByCPUTime[i].SQLID = strArr[8]
-			conf.OrderedByCPUTime[i].SQLModule = strArr[9]
-			conf.OrderedByCPUTime[i].SQLText = strArr[10]
+			conf.SQLOrderedByCPUTime[i].CPUTime, _ = strconv.ParseFloat(strArr[1], 64)
+			conf.SQLOrderedByCPUTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.SQLOrderedByCPUTime[i].CPUPerExec, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.SQLOrderedByCPUTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.SQLOrderedByCPUTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
+			conf.SQLOrderedByCPUTime[i].CPU, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.SQLOrderedByCPUTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
+			conf.SQLOrderedByCPUTime[i].SQLID = strArr[8]
+			conf.SQLOrderedByCPUTime[i].SQLModule = strArr[9]
+			conf.SQLOrderedByCPUTime[i].SQLText = strArr[10]
 			i++
 		}
 	}
 
 	if value, ok := maps["SQL ordered by User I/O Wait Time"]; ok {
 		i = 0
-		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
-		conf.OrderedByUserIOWaitTime = make([]OrderedByUserIOWaitTime, (len(textBody) -1))  // -1 because first line not contain information
+		textBody =  strings.Split(value, `<tr><td align="right" `)                               // split line
+		conf.SQLOrderedByUserIOWaitTime = make([]SQLOrderedByUserIOWaitTime, (len(textBody) -1)) // -1 because first line not contain information
 
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
@@ -205,21 +205,45 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.OrderedByUserIOWaitTime[i].UserIOTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.OrderedByUserIOWaitTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.OrderedByUserIOWaitTime[i].UIOPerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.OrderedByUserIOWaitTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.OrderedByUserIOWaitTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.OrderedByUserIOWaitTime[i].Cpu, _ = strconv.ParseFloat(strArr[6], 64)
-			conf.OrderedByUserIOWaitTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
-			conf.OrderedByUserIOWaitTime[i].SQLID = strArr[8]
-			conf.OrderedByUserIOWaitTime[i].SQLModule = strArr[9]
-			conf.OrderedByUserIOWaitTime[i].SQLText = strArr[10]
+			conf.SQLOrderedByUserIOWaitTime[i].UserIOTime, _ = strconv.ParseFloat(strArr[1], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].UIOPerExec, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].Cpu, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].SQLID = strArr[8]
+			conf.SQLOrderedByUserIOWaitTime[i].SQLModule = strArr[9]
+			conf.SQLOrderedByUserIOWaitTime[i].SQLText = strArr[10]
 			i++
 		}
 	}
 
-	// Top SQL with Top Events
+	if value, ok := maps["Top SQL with Top Events"]; ok {
+		i = 0
+		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
+		conf.TopSQLWithTopEvents = make([]TopSQLWithTopEvents, (len(textBody) -1))  // -1 because first line not contain information
+
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.SQLOrderedByUserIOWaitTime[i].UserIOTime, _ = strconv.ParseFloat(strArr[1], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].UIOPerExec, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].Cpu, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].SQLID = strArr[8]
+			conf.SQLOrderedByUserIOWaitTime[i].SQLModule = strArr[9]
+			conf.SQLOrderedByUserIOWaitTime[i].SQLText = strArr[10]
+			i++
+		}
+	}
 	// Top SQL with Top Row Sources
 }
 
