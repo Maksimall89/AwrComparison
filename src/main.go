@@ -73,16 +73,16 @@ type SQLOrderedByUserIOWaitTime struct{
 }
 // Top SQL with Top Events
 type TopSQLWithTopEvents struct{
-	SQLID				string
-	PlanHash			float64
-	Executions			float64
-	Activity			float64
-	Event				string
-	ElapsedTime			float64
-	EventPer			float64
-	TopRowSource		string
-	RowSourcePer		float64
-	SQLText				string
+	SQLID        string
+	PlanHash     float64
+	Executions   float64
+	Activity     float64
+	Event        string
+	ElapsedTime  float64
+	EventPer     float64
+	RowSource    string
+	RowSourcePer float64
+	SQLText      string
 }
 // Top SQL with Top Row Sources
 type TopSQLWithTopRowSources struct{
@@ -225,26 +225,48 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		conf.TopSQLWithTopEvents = make([]TopSQLWithTopEvents, (len(textBody) -1))  // -1 because first line not contain information
 
 		for _, iter := range textBody{
-			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			strArr = regexp.MustCompile(`class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
 
 			if len(strArr) == 0 {	// if we can't select to next line
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderedByUserIOWaitTime[i].UserIOTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].UIOPerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].Cpu, _ = strconv.ParseFloat(strArr[6], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].SQLID = strArr[8]
-			conf.SQLOrderedByUserIOWaitTime[i].SQLModule = strArr[9]
-			conf.SQLOrderedByUserIOWaitTime[i].SQLText = strArr[10]
+			conf.TopSQLWithTopEvents[i].SQLID = strArr[1]
+			conf.TopSQLWithTopEvents[i].PlanHash, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.TopSQLWithTopEvents[i].Executions, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.TopSQLWithTopEvents[i].Activity, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.TopSQLWithTopEvents[i].Event = strArr[5]
+			conf.TopSQLWithTopEvents[i].EventPer, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.TopSQLWithTopEvents[i].RowSource = strArr[7]
+			conf.TopSQLWithTopEvents[i].RowSourcePer, _ = strconv.ParseFloat(strArr[8], 64)
+			conf.TopSQLWithTopEvents[i].SQLText = strArr[9]
 			i++
 		}
 	}
-	// Top SQL with Top Row Sources
+
+	if value, ok := maps["Top SQL with Top Row Sources"]; ok {
+		i = 0
+		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
+		conf.TopSQLWithTopRowSources = make([]TopSQLWithTopRowSources, (len(textBody) -1))  // -1 because first line not contain information
+
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.TopSQLWithTopRowSources[i].SQLID = strArr[1]
+			conf.TopSQLWithTopRowSources[i].PlanHash, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.TopSQLWithTopRowSources[i].Executions, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.TopSQLWithTopRowSources[i].Activity, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.TopSQLWithTopRowSources[i].RowSource = strArr[5]
+			conf.TopSQLWithTopRowSources[i].RowSourcePer, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.TopSQLWithTopRowSources[i].TopEvent = strArr[7]
+			conf.TopSQLWithTopRowSources[i].EventPer, _ = strconv.ParseFloat(strArr[8], 64)
+			conf.TopSQLWithTopRowSources[i].SQLText = strArr[9]
+			i++
+		}
+	}
 }
 
 // TODO анализатор таблиц
