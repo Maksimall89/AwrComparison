@@ -33,6 +33,104 @@ type MainTable struct {
 	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
 	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
 	OperatingSystemStatistics	[]OperatingSystemStatistics
+	ReportSummary				ReportSummary
+}
+// Report Summary
+type ReportSummary struct{
+	TopADDMFindingsByAverageActiveSessions	[]TopADDMFindingsByAverageActiveSessions
+	LoadProfile								[]LoadProfile
+	InstanceEfficiencyPercentages			[]InstanceEfficiencyPercentages
+	Top10ForegroundEventsByTotalWaitTime	[]Top10ForegroundEventsByTotalWaitTime
+	WaitClassesByTotalWaitTime				[]WaitClassesByTotalWaitTime
+	HostCPU 								[]HostCPU
+	InstanceCPU 							[]InstanceCPU
+	IOProfile								[]IOProfile
+	MemoryStatistics 						[]MemoryStatistics
+	CacheSizes 								[]CacheSizes
+	SharedPoolStatistics 					[]SharedPoolStatistics
+}
+// Top ADDM Findings by Average Active Sessions
+type TopADDMFindingsByAverageActiveSessions struct{
+	FindingName					string
+	AvgActiveSessionsTask		float64
+	PerActiveSessionsFinding	float64
+	TaskName					string
+	BeginSnapTime				string
+	EndSnapTide					string
+}
+// Load Profile
+type LoadProfile struct{
+	Name			string
+	PerSecond		float64
+	PerTransaction	float64
+	PerExec			float64
+	PerCall			float64
+}
+// Instance Efficiency Percentages (Target 100%)
+type InstanceEfficiencyPercentages struct{
+	Name	string
+	Value	string
+}
+//Top 10 Foreground Events by Total Wait Time
+type Top10ForegroundEventsByTotalWaitTime struct{
+	Event			string
+	Waits 			float64
+	TotalWaitTime 	float64
+	WaitAvg			float64
+	PerDBTime		float64
+	WaitClass		string
+}
+//Wait Classes by Total Wait Time
+type WaitClassesByTotalWaitTime struct{
+	WaitClass			string
+	Waits				float64
+	TotalWaitTime		float64
+	AvgWait				float64
+	PerDBTime			float64
+	AvgActiveSessions	float64
+}
+// Host CPU
+type HostCPU struct{
+	CPUs	float64
+	Cores	float64
+	Sockets	float64
+	LABegin	float64
+	LAEnd	float64
+	PerUser	float64
+	PerSystem	float64
+	PerWIO	float64
+	PerIDLE	float64
+}
+// Instance CPU
+type InstanceCPU struct{
+	PerTotalCPU				float64
+	PerBysuCPU				float64
+	PerDBTimeWaiting		float64
+}
+// IO Profile
+type IOProfile struct {
+	Name			string
+	RWPerSecond		float64
+	ReadPerSecond	float64
+	WritePerSecond	float64
+}
+// Memory Statistics
+type MemoryStatistics struct {
+	Name 	string
+	Begin	float64
+	End		float64
+}
+// Cache Sizes
+type CacheSizes struct {
+	Name 	string
+	Begin	float64
+	End	float64
+}
+// Shared Pool Statistics
+type SharedPoolStatistics struct {
+	Value	string
+	Begin	float64
+	End		float64
 }
 // SQL ordered by Elapsed Time
 type SQLOrderByElapsedTime struct{
@@ -288,29 +386,11 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 	}
 	if value, ok := maps["Report Summary"]; ok {
 		i = 0
-		log.Fatal(value)
-		textBody =  strings.Split(value, `<tr><td scope="row" `)// split line
-		conf.OperatingSystemStatistics = make([]OperatingSystemStatistics, (len(textBody) -1))  // -1 because first line not contain information
+		textBody = regexp.MustCompile(`<p />(.*?)<p /><`).Split(value, -1)	// split line
+		//conf.ReportSummary = make(ReportSummary)  // -1 because first line not contain information
 
 		for _, iter := range textBody{
-			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
-			if len(strArr) == 0 {	// if we can't select to next line
-				continue
-			}
-			// fill in our struct
-			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
-			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
-			i++
-		}
-	}
-	if value, ok := maps["Report Summary"]; ok {
-		i = 0
-		log.Fatal(value)
-		textBody =  strings.Split(value, `<tr><td scope="row" `)// split line
-		conf.OperatingSystemStatistics = make([]OperatingSystemStatistics, (len(textBody) -1))  // -1 because first line not contain information
-
-		for _, iter := range textBody{
+			log.Println(iter)
 			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
 			if len(strArr) == 0 {	// if we can't select to next line
 				continue
@@ -323,7 +403,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		}
 	}
 }
-
 // TODO анализатор таблиц
 func tableAnalyzer(){
 
@@ -372,7 +451,6 @@ func createMaps(textInput string, maps map[string]string) error{
 	}
 	return nil
 }
-
 func main() {
 
 	// configurator for logger
@@ -417,7 +495,6 @@ func main() {
 	}
 
 	//log.Println(body)
-
 	//log.Println(maps["SQL ordered by Elapsed Time"])
 
 	parser(&work, maps)
