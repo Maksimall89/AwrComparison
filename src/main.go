@@ -140,7 +140,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			i++
 		}
 	}
-
 	if value, ok := maps["SQL ordered by Elapsed Time"]; ok {
 		i = 0
 		//textBody := regexp.MustCompile(`<tr><td align`).Split(value, -1)	// split line
@@ -166,7 +165,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			i++
 		}
 	}
-
 	if value, ok := maps["SQL ordered by CPU Time"]; ok {
 		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)                 // split line
@@ -192,7 +190,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			i++
 		}
 	}
-
 	if value, ok := maps["SQL ordered by User I/O Wait Time"]; ok {
 		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)                               // split line
@@ -218,7 +215,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			i++
 		}
 	}
-
 	if value, ok := maps["Top SQL with Top Events"]; ok {
 		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
@@ -243,7 +239,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			i++
 		}
 	}
-
 	if value, ok := maps["Top SQL with Top Row Sources"]; ok {
 		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
