@@ -26,12 +26,13 @@ type Config struct {
 	OwnName          string
 }
 type MainTable struct {
-	SQLOrderByElapsedTime      []SQLOrderByElapsedTime
-	CompleteListOfSQLText      []CompleteListOfSQLText
-	SQLOrderedByCPUTime        []SQLOrderedByCPUTime
-	SQLOrderedByUserIOWaitTime []SQLOrderedByUserIOWaitTime
-	TopSQLWithTopEvents        []TopSQLWithTopEvents
-	TopSQLWithTopRowSources    []TopSQLWithTopRowSources
+	SQLOrderByElapsedTime      	[]SQLOrderByElapsedTime
+	CompleteListOfSQLText      	[]CompleteListOfSQLText
+	SQLOrderedByCPUTime        	[]SQLOrderedByCPUTime
+	SQLOrderedByUserIOWaitTime 	[]SQLOrderedByUserIOWaitTime
+	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
+	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
+	OperatingSystemStatistics	[]OperatingSystemStatistics
 }
 // SQL ordered by Elapsed Time
 type SQLOrderByElapsedTime struct{
@@ -95,6 +96,12 @@ type TopSQLWithTopRowSources struct{
 	TopEvent			string
 	EventPer			float64
 	SQLText				string
+}
+//Operating System Statistics
+type OperatingSystemStatistics struct{
+	Statistic		string
+	Value			float64
+	EndValue		float64
 }
 // Complete List of SQL Text
 type CompleteListOfSQLText struct{
@@ -259,6 +266,24 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			conf.TopSQLWithTopRowSources[i].TopEvent = strArr[7]
 			conf.TopSQLWithTopRowSources[i].EventPer, _ = strconv.ParseFloat(strArr[8], 64)
 			conf.TopSQLWithTopRowSources[i].SQLText = strArr[9]
+			i++
+		}
+	}
+	if value, ok := maps["Operating System Statistics"]; ok {
+		i = 0
+		textBody =  strings.Split(value, `<tr><td scope="row" `)// split line
+		conf.OperatingSystemStatistics = make([]OperatingSystemStatistics, (len(textBody) -1))  // -1 because first line not contain information
+
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
+			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
+
 			i++
 		}
 	}
