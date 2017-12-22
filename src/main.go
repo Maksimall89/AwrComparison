@@ -283,7 +283,42 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
 			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
 			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
+			i++
+		}
+	}
+	if value, ok := maps["Report Summary"]; ok {
+		i = 0
+		log.Fatal(value)
+		textBody =  strings.Split(value, `<tr><td scope="row" `)// split line
+		conf.OperatingSystemStatistics = make([]OperatingSystemStatistics, (len(textBody) -1))  // -1 because first line not contain information
 
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
+			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
+			i++
+		}
+	}
+	if value, ok := maps["Report Summary"]; ok {
+		i = 0
+		log.Fatal(value)
+		textBody =  strings.Split(value, `<tr><td scope="row" `)// split line
+		conf.OperatingSystemStatistics = make([]OperatingSystemStatistics, (len(textBody) -1))  // -1 because first line not contain information
+
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
+			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
+			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
 			i++
 		}
 	}
