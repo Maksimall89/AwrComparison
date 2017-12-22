@@ -210,6 +210,7 @@ type worker interface{
 	tableAnalyzer()
 	sqlAnalyzer()
 }
+
 // reading text from a file
 func readFile(name string) (string, error)  {
 	var body string	// all text awr html
@@ -226,6 +227,7 @@ func readFile(name string) (string, error)  {
 	return body, nil
 }
 // TODO парсер лога и запись его в структуры
+
 func parser(conf *MainTable, maps map[string]string) ()  {
 	var textBody []string	// text section
 	var strArr []string	// text line
@@ -386,20 +388,43 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 	}
 	if value, ok := maps["Report Summary"]; ok {
 		i = 0
+		//var strArrItem []string
 		textBody = regexp.MustCompile(`<p />(.*?)<p /><`).Split(value, -1)	// split line
 		//conf.ReportSummary = make(ReportSummary)  // -1 because first line not contain information
 
 		for _, iter := range textBody{
-			log.Println(iter)
-			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			strArr = regexp.MustCompile(`summary="(.*?)"`).FindStringSubmatch(iter) // select item from row
 			if len(strArr) == 0 {	// if we can't select to next line
 				continue
 			}
+
+			switch strArr[1]{
+			case "This table displays top ADDM findings by average active sessions":
+				var re = regexp.MustCompile(`<tr><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`)
+				for i, match := range re.Split(iter, -1) {
+					fmt.Println(match, "found at index", i)
+				}
+
+			case "This table displays load profile":
+			case "This table displays instance efficiency percentages":
+			case "This table displays top 10 wait events by total wait time":
+			case "This table displays wait class statistics ordered by total wait time":
+			case "This table displays system load statistics":
+			case "This table displays CPU usage and wait statistics":
+			case "This table displays IO profile":
+			case "This table displays memory statistics":
+			case "This table displays cache sizes and other statistics for                     different types of cache":
+			case "This table displays shared pool statistics":
+			default : continue
+			}
+
 			// fill in our struct
+			/*
 			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
 			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
 			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
 			i++
+			*/
 		}
 	}
 }
