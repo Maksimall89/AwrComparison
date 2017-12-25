@@ -56,7 +56,7 @@ type TopADDMFindingsByAverageActiveSessions struct{
 	PerActiveSessionsFinding	float64
 	TaskName					string
 	BeginSnapTime				string
-	EndSnapTide					string
+	EndSnapTime					string
 }
 // Load Profile
 type LoadProfile struct{
@@ -387,7 +387,9 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		}
 	}
 	if value, ok := maps["Report Summary"]; ok {
-		i = 0
+
+		var textBodyTwo []string
+		var val string
 		//var strArrItem []string
 		textBody = regexp.MustCompile(`<p />(.*?)<p /><`).Split(value, -1)	// split line
 		//conf.ReportSummary = make(ReportSummary)  // -1 because first line not contain information
@@ -400,9 +402,22 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 
 			switch strArr[1]{
 			case "This table displays top ADDM findings by average active sessions":
-				var re = regexp.MustCompile(`<tr><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`)
-				for i, match := range re.Split(iter, -1) {
-					fmt.Println(match, "found at index", i)
+				i = 0
+				textBodyTwo = regexp.MustCompile(`<tr><td class='\w+'>`).Split(iter, -1)// split line
+				conf.ReportSummary.TopADDMFindingsByAverageActiveSessions = make([]TopADDMFindingsByAverageActiveSessions, (len(textBodyTwo) - 1)) // -1 because last second item not contain information
+				for _, val = range textBodyTwo{
+					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					if len(strArr) == 0 {	// if we can't select to next line
+						continue
+					}
+					fmt.Println(strArr[1])
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].FindingName = strArr[1]
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].AvgActiveSessionsTask, _ = strconv.ParseFloat(strArr[2], 64)
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].PerActiveSessionsFinding, _ = strconv.ParseFloat(strArr[3], 64)
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].TaskName = strArr[4]
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].BeginSnapTime = strArr[5]
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].EndSnapTime = strArr[6]
+					i++
 				}
 
 			case "This table displays load profile":
