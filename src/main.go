@@ -535,26 +535,39 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.IOProfile[i].WritePerSecond= fixDot(strArr[4])
 					i++
 				}
-
 			case "This table displays memory statistics":
 				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.IOProfile = make([]IOProfile, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
+				conf.ReportSummary.MemoryStatistics = make([]MemoryStatistics, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
-					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.IOProfile[i].Name = strArr[1]
-					conf.ReportSummary.IOProfile[i].RWPerSecond = fixDot(strArr[2])
-					conf.ReportSummary.IOProfile[i].ReadPerSecond= fixDot(strArr[3])
-					conf.ReportSummary.IOProfile[i].WritePerSecond= fixDot(strArr[4])
+					conf.ReportSummary.MemoryStatistics[i].Name = strArr[1]
+					conf.ReportSummary.MemoryStatistics[i].Begin = fixDot(strArr[2])
+					conf.ReportSummary.MemoryStatistics[i].End= fixDot(strArr[3])
+
 					i++
 				}
-				for _, x:= range conf.ReportSummary.IOProfile{
+			case "This table displays cache sizes and other statistics for                     different types of cache":
+				i = 0
+				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
+				conf.ReportSummary.MemoryStatistics = make([]MemoryStatistics, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
+				for _, val = range textBodyTwo{
+					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					if len(strArr) == 0 {	// if we can't select to next line
+						continue
+					}
+					conf.ReportSummary.MemoryStatistics[i].Name = strArr[1]
+					conf.ReportSummary.MemoryStatistics[i].Begin = fixDot(strArr[2])
+					conf.ReportSummary.MemoryStatistics[i].End= fixDot(strArr[3])
+
+					i++
+				}
+				for _, x:= range conf.ReportSummary.MemoryStatistics{
 					fmt.Println(x)
 				}
-			case "This table displays cache sizes and other statistics for                     different types of cache":
 			case "This table displays shared pool statistics":
 			default : continue
 			}
