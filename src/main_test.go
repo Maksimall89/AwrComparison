@@ -54,3 +54,28 @@ func TestCreateMaps(t *testing.T) {
 	}
 
 }
+func TestFixDot(t *testing.T) {
+	type testPair struct {
+		input string
+		output string
+	}
+
+	var tests = []testPair{
+		{"100.00", `100.00`},
+		{"1,041,385", `1041385`},
+		{"78", `78`},
+	}
+
+	for _, pair := range tests {
+		v := fixDot(pair.input)
+		if (v != pair.output)  {
+			t.Error(
+				"For", pair.input,
+				"\n expected:", pair.output,
+				"\n got text:", v,
+			)
+		}
+	}
+
+
+}

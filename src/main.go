@@ -228,6 +228,9 @@ func readFile(name string) (string, error)  {
 }
 // TODO парсер лога и запись его в структуры
 
+func fixDot(val string) string{
+	return 	strings.Replace(val, ",", "", -1)
+}
 func parser(conf *MainTable, maps map[string]string) ()  {
 	var textBody []string	// text section
 	var strArr []string	// text line
@@ -458,7 +461,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
 				conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime = make([]Top10ForegroundEventsByTotalWaitTime, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
-				//	log.Println(val)
 					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
@@ -476,18 +478,21 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
 				conf.ReportSummary.WaitClassesByTotalWaitTime = make([]WaitClassesByTotalWaitTime, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
-					//	log.Println(val)
-					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
 					conf.ReportSummary.WaitClassesByTotalWaitTime[i].WaitClass = strArr[1]
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].Waits, _ = strconv.ParseFloat(strArr[1], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].TotalWaitTime, _ = strconv.ParseFloat(strArr[1], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgWait, _ = strconv.ParseFloat(strArr[1], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].PerDBTime, _ = strconv.ParseFloat(strArr[1], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgActiveSessions, _ = strconv.ParseFloat(strArr[1], 64)
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].Waits, _ = strconv.ParseFloat(strArr[2], 64)
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].TotalWaitTime, _ = strconv.ParseFloat(strArr[3], 64)
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgWait, _ = strconv.ParseFloat(strArr[4], 64)
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].PerDBTime, _ = strconv.ParseFloat(strArr[5], 64)
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgActiveSessions, _ = strconv.ParseFloat(strArr[6], 64)
 					i++
+				}
+
+				for _, x:= range conf.ReportSummary.WaitClassesByTotalWaitTime{
+					fmt.Println(x)
 				}
 			case "This table displays system load statistics":
 			case "This table displays CPU usage and wait statistics":
