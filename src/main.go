@@ -446,7 +446,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.InstanceEfficiencyPercentages[i].Name = strArr[1]
 					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value, _ = strconv.ParseFloat(strArr[1], 64)
 					i++
-					if strArr[4] == "" {
+					if strArr[4] == "" {	// last line without content
 						break
 					}
 					conf.ReportSummary.InstanceEfficiencyPercentages[i].Name = strArr[4]
@@ -454,6 +454,23 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					i++
 				}
 			case "This table displays top 10 wait events by total wait time":
+				i = 0
+				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
+				conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime = make([]Top10ForegroundEventsByTotalWaitTime, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
+				for _, val = range textBodyTwo{
+				//	log.Println(val)
+					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					if len(strArr) == 0 {	// if we can't select to next line
+						continue
+					}
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Event = strArr[1]
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Waits, _ = strconv.ParseFloat(strArr[1], 64)
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].TotalWaitTime, _ = strconv.ParseFloat(strArr[1], 64)
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitAvg, _ = strconv.ParseFloat(strArr[1], 64)
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].PerDBTime, _ = strconv.ParseFloat(strArr[1], 64)
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitClass = strArr[1]
+					i++
+				}
 			case "This table displays wait class statistics ordered by total wait time":
 			case "This table displays system load statistics":
 			case "This table displays CPU usage and wait statistics":
