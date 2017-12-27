@@ -128,7 +128,7 @@ type CacheSizes struct {
 }
 // Shared Pool Statistics
 type SharedPoolStatistics struct {
-	Value	string
+	Name	string
 	Begin	float64
 	End		float64
 }
@@ -565,7 +565,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.CacheSizes[i].Begin = fixDot(strArr[2])
 					conf.ReportSummary.CacheSizes[i].End= fixDot(strArr[3])
 
-					if strArr[5] == ""{
+					if strArr[5] == ""{	// last line
 						break
 					}
 
@@ -574,13 +574,20 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.CacheSizes[i].Begin = fixDot(strArr[6])
 					i++
 				}
-				for _, x:= range conf.ReportSummary.CacheSizes{
-					fmt.Println(x)
-				}
-
 			case "This table displays shared pool statistics":
-
-				//strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+				i = 0
+				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
+				conf.ReportSummary.SharedPoolStatistics = make([]SharedPoolStatistics, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
+				for _, val = range textBodyTwo{
+					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					if len(strArr) == 0 {	// if we can't select to next line
+						continue
+					}
+					conf.ReportSummary.SharedPoolStatistics[i].Name = strArr[1]
+					conf.ReportSummary.SharedPoolStatistics[i].Begin = fixDot(strArr[2])
+					conf.ReportSummary.SharedPoolStatistics[i].End= fixDot(strArr[3])
+					i++
+				}
 
 			default : continue
 			}
