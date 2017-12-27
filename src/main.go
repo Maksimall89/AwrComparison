@@ -69,7 +69,7 @@ type LoadProfile struct{
 // Instance Efficiency Percentages (Target 100%)
 type InstanceEfficiencyPercentages struct{
 	Name	string
-	Value	string
+	Value	float64
 }
 //Top 10 Foreground Events by Total Wait Time
 type Top10ForegroundEventsByTotalWaitTime struct{
@@ -423,7 +423,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
 				conf.ReportSummary.LoadProfile = make([]LoadProfile, (len(textBodyTwo) - 1)) // -1 because last second item not contain information
 				for _, val = range textBodyTwo{
-
 					strArr = regexp.MustCompile(`(.*?):</td><td( align="right")* class='\w+'>\s*(.*?)</td><td( align="right")* class='\w+'>\s*(.*?)</td><td( align="right")* class='\w+'>\s*(.*?)</td><td( align="right")* class='\w+'>\s*(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
@@ -436,6 +435,24 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					i++
 				}
 			case "This table displays instance efficiency percentages":
+				i = 0
+				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
+				conf.ReportSummary.InstanceEfficiencyPercentages = make([]InstanceEfficiencyPercentages, (len(textBodyTwo)*2 - 3)) // -3 because last second item not contain information
+				for _, val = range textBodyTwo{
+					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>\s*(.*?)</td>(<td class='\w+'>(.*?):</td><td align="right" class='\w+'>\s*(.*?)</td>)*</tr>`).FindStringSubmatch(val) // select item from row
+					if len(strArr) == 0 {	// if we can't select to next line
+						continue
+					}
+					conf.ReportSummary.InstanceEfficiencyPercentages[i].Name = strArr[1]
+					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value, _ = strconv.ParseFloat(strArr[1], 64)
+					i++
+					if strArr[4] == "" {
+						break
+					}
+					conf.ReportSummary.InstanceEfficiencyPercentages[i].Name = strArr[4]
+					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value, _ = strconv.ParseFloat(strArr[5], 64)
+					i++
+				}
 			case "This table displays top 10 wait events by total wait time":
 			case "This table displays wait class statistics ordered by total wait time":
 			case "This table displays system load statistics":
