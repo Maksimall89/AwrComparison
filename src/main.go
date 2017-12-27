@@ -232,6 +232,8 @@ func fixDot(str string) float64{
 	// replace , and .
 	str = strings.Replace(str, ",", "", -1)
 	str = strings.Replace(str, " ", "", -1)
+	str = strings.Replace(str, "M", "048576", -1)	// TODO доделать умножение 1 048 576
+	str = strings.Replace(str, "K", "024", -1)	// 1024
 	// convert type from string to float64
 	val, err := strconv.ParseFloat(str, 64)
 	if err != nil{
@@ -553,22 +555,33 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			case "This table displays cache sizes and other statistics for                     different types of cache":
 				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.MemoryStatistics = make([]MemoryStatistics, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
+				conf.ReportSummary.CacheSizes = make([]CacheSizes, (len(textBodyTwo)*2 - 3)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
-					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
+					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td>(<td class='\w+'>(.*?):</td><td align="right" class='\w+'>(.*?)</td>)*</tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.MemoryStatistics[i].Name = strArr[1]
-					conf.ReportSummary.MemoryStatistics[i].Begin = fixDot(strArr[2])
-					conf.ReportSummary.MemoryStatistics[i].End= fixDot(strArr[3])
+					conf.ReportSummary.CacheSizes[i].Name = strArr[1]
+					conf.ReportSummary.CacheSizes[i].Begin = fixDot(strArr[2])
+					conf.ReportSummary.CacheSizes[i].End= fixDot(strArr[3])
+
+					if strArr[5] == ""{
+						break
+					}
 
 					i++
+					conf.ReportSummary.CacheSizes[i].Name = strArr[5]
+					conf.ReportSummary.CacheSizes[i].Begin = fixDot(strArr[6])
+					i++
 				}
-				for _, x:= range conf.ReportSummary.MemoryStatistics{
+				for _, x:= range conf.ReportSummary.CacheSizes{
 					fmt.Println(x)
 				}
+
 			case "This table displays shared pool statistics":
+
+				//strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+
 			default : continue
 			}
 		}

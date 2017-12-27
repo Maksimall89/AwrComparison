@@ -67,6 +67,8 @@ func TestFixDot(t *testing.T) {
 		{"78", 78},
 		{"    789", 789},
 		{"asdasd", 0},
+		{"20,352M	", 20.352048576},
+		{"60,368K", 60.368024},
 	}
 
 	for _, pair := range tests {
