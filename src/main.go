@@ -500,7 +500,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				}
 			case "This table displays system load statistics":
 				strArr = regexp.MustCompile(`<tr><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
-				conf.ReportSummary.HostCPU = make([]HostCPU, 1) // -3 because last second item not contain information
+				conf.ReportSummary.HostCPU = make([]HostCPU, 1) // everytime we have only one line
 				if len(strArr) == 10 {
 					conf.ReportSummary.HostCPU[0].CPUs = fixDot(strArr[1])
 					conf.ReportSummary.HostCPU[0].Cores = fixDot(strArr[2])
@@ -513,7 +513,17 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.HostCPU[0].PerIDLE= fixDot(strArr[9])
 				}
 			case "This table displays CPU usage and wait statistics":
+				strArr = regexp.MustCompile(`<td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+				conf.ReportSummary.InstanceCPU = make([]InstanceCPU, 1) // everytime we have only one line
+				if len(strArr) == 4 {
+					conf.ReportSummary.InstanceCPU[0].PerTotalCPU = fixDot(strArr[1])
+					conf.ReportSummary.InstanceCPU[0].PerBysuCPU = fixDot(strArr[2])
+					conf.ReportSummary.InstanceCPU[0].PerDBTimeWaiting= fixDot(strArr[3])
+				}
 			case "This table displays IO profile":
+				for _, x:= range conf.ReportSummary.InstanceCPU{
+					fmt.Println(x)
+				}
 			case "This table displays memory statistics":
 			case "This table displays cache sizes and other statistics for                     different types of cache":
 			case "This table displays shared pool statistics":
