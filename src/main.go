@@ -228,8 +228,15 @@ func readFile(name string) (string, error)  {
 }
 // TODO парсер лога и запись его в структуры
 
-func fixDot(val string) string{
-	return 	strings.Replace(val, ",", "", -1)
+func fixDot(str string) float64{
+	// replace , and .
+	str = strings.Replace(str, ",", "", -1)
+	// convert type from string to float64
+	val, err := strconv.ParseFloat(str, 64)
+	if err != nil{
+		log.Println(err)
+	}
+	return 	val
 }
 func parser(conf *MainTable, maps map[string]string) ()  {
 	var textBody []string	// text section
@@ -263,12 +270,12 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderByElapsedTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.SQLOrderByElapsedTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.SQLOrderByElapsedTime[i].ElapsedTimePerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.SQLOrderByElapsedTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.SQLOrderByElapsedTime[i].Cpu, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.SQLOrderByElapsedTime[i].IO, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.SQLOrderByElapsedTime[i].ElapsedTime = fixDot(strArr[1])
+			conf.SQLOrderByElapsedTime[i].Executions = fixDot(strArr[2])
+			conf.SQLOrderByElapsedTime[i].ElapsedTimePerExec = fixDot(strArr[3])
+			conf.SQLOrderByElapsedTime[i].Total = fixDot(strArr[4])
+			conf.SQLOrderByElapsedTime[i].Cpu = fixDot(strArr[5])
+			conf.SQLOrderByElapsedTime[i].IO = fixDot(strArr[6])
 			conf.SQLOrderByElapsedTime[i].SQLID = strArr[7]
 			conf.SQLOrderByElapsedTime[i].SQLModule = strArr[8]
 			conf.SQLOrderByElapsedTime[i].SQLText = strArr[9]
@@ -287,13 +294,13 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderedByCPUTime[i].CPUTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.SQLOrderedByCPUTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.SQLOrderedByCPUTime[i].CPUPerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.SQLOrderedByCPUTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.SQLOrderedByCPUTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.SQLOrderedByCPUTime[i].CPU, _ = strconv.ParseFloat(strArr[6], 64)
-			conf.SQLOrderedByCPUTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
+			conf.SQLOrderedByCPUTime[i].CPUTime = fixDot(strArr[1])
+			conf.SQLOrderedByCPUTime[i].Executions = fixDot(strArr[2])
+			conf.SQLOrderedByCPUTime[i].CPUPerExec = fixDot(strArr[3])
+			conf.SQLOrderedByCPUTime[i].Total = fixDot(strArr[4])
+			conf.SQLOrderedByCPUTime[i].ElapsedTime = fixDot(strArr[5])
+			conf.SQLOrderedByCPUTime[i].CPU = fixDot(strArr[6])
+			conf.SQLOrderedByCPUTime[i].IO = fixDot(strArr[7])
 			conf.SQLOrderedByCPUTime[i].SQLID = strArr[8]
 			conf.SQLOrderedByCPUTime[i].SQLModule = strArr[9]
 			conf.SQLOrderedByCPUTime[i].SQLText = strArr[10]
@@ -312,13 +319,13 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderedByUserIOWaitTime[i].UserIOTime, _ = strconv.ParseFloat(strArr[1], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].Executions, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].UIOPerExec, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].Total, _ = strconv.ParseFloat(strArr[4], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].ElapsedTime, _ = strconv.ParseFloat(strArr[5], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].Cpu, _ = strconv.ParseFloat(strArr[6], 64)
-			conf.SQLOrderedByUserIOWaitTime[i].IO, _ = strconv.ParseFloat(strArr[7], 64)
+			conf.SQLOrderedByUserIOWaitTime[i].UserIOTime = fixDot(strArr[1])
+			conf.SQLOrderedByUserIOWaitTime[i].Executions = fixDot(strArr[2])
+			conf.SQLOrderedByUserIOWaitTime[i].UIOPerExec = fixDot(strArr[3])
+			conf.SQLOrderedByUserIOWaitTime[i].Total = fixDot(strArr[4])
+			conf.SQLOrderedByUserIOWaitTime[i].ElapsedTime = fixDot(strArr[5])
+			conf.SQLOrderedByUserIOWaitTime[i].Cpu = fixDot(strArr[6])
+			conf.SQLOrderedByUserIOWaitTime[i].IO = fixDot(strArr[7])
 			conf.SQLOrderedByUserIOWaitTime[i].SQLID = strArr[8]
 			conf.SQLOrderedByUserIOWaitTime[i].SQLModule = strArr[9]
 			conf.SQLOrderedByUserIOWaitTime[i].SQLText = strArr[10]
@@ -338,13 +345,13 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			}
 			// fill in our struct
 			conf.TopSQLWithTopEvents[i].SQLID = strArr[1]
-			conf.TopSQLWithTopEvents[i].PlanHash, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.TopSQLWithTopEvents[i].Executions, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.TopSQLWithTopEvents[i].Activity, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.TopSQLWithTopEvents[i].PlanHash = fixDot(strArr[2])
+			conf.TopSQLWithTopEvents[i].Executions = fixDot(strArr[3])
+			conf.TopSQLWithTopEvents[i].Activity = fixDot(strArr[4])
 			conf.TopSQLWithTopEvents[i].Event = strArr[5]
-			conf.TopSQLWithTopEvents[i].EventPer, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.TopSQLWithTopEvents[i].EventPer = fixDot(strArr[6])
 			conf.TopSQLWithTopEvents[i].RowSource = strArr[7]
-			conf.TopSQLWithTopEvents[i].RowSourcePer, _ = strconv.ParseFloat(strArr[8], 64)
+			conf.TopSQLWithTopEvents[i].RowSourcePer = fixDot(strArr[8])
 			conf.TopSQLWithTopEvents[i].SQLText = strArr[9]
 			i++
 		}
@@ -361,13 +368,13 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			}
 			// fill in our struct
 			conf.TopSQLWithTopRowSources[i].SQLID = strArr[1]
-			conf.TopSQLWithTopRowSources[i].PlanHash, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.TopSQLWithTopRowSources[i].Executions, _ = strconv.ParseFloat(strArr[3], 64)
-			conf.TopSQLWithTopRowSources[i].Activity, _ = strconv.ParseFloat(strArr[4], 64)
+			conf.TopSQLWithTopRowSources[i].PlanHash = fixDot(strArr[2])
+			conf.TopSQLWithTopRowSources[i].Executions = fixDot(strArr[3])
+			conf.TopSQLWithTopRowSources[i].Activity = fixDot(strArr[4])
 			conf.TopSQLWithTopRowSources[i].RowSource = strArr[5]
-			conf.TopSQLWithTopRowSources[i].RowSourcePer, _ = strconv.ParseFloat(strArr[6], 64)
+			conf.TopSQLWithTopRowSources[i].RowSourcePer = fixDot(strArr[6])
 			conf.TopSQLWithTopRowSources[i].TopEvent = strArr[7]
-			conf.TopSQLWithTopRowSources[i].EventPer, _ = strconv.ParseFloat(strArr[8], 64)
+			conf.TopSQLWithTopRowSources[i].EventPer = fixDot(strArr[8])
 			conf.TopSQLWithTopRowSources[i].SQLText = strArr[9]
 			i++
 		}
@@ -384,8 +391,8 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			}
 			// fill in our struct
 			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
-			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
+			conf.OperatingSystemStatistics[i].Value = fixDot(strArr[2])
+			conf.OperatingSystemStatistics[i].EndValue = fixDot(strArr[3])
 			i++
 		}
 	}
@@ -414,8 +421,8 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 						continue
 					}
 					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].FindingName = strArr[1]
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].AvgActiveSessionsTask, _ = strconv.ParseFloat(strArr[2], 64)
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].PerActiveSessionsFinding, _ = strconv.ParseFloat(strArr[3], 64)
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].AvgActiveSessionsTask = fixDot(strArr[2])
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].PerActiveSessionsFinding = fixDot(strArr[3])
 					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].TaskName = strArr[4]
 					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].BeginSnapTime = strArr[5]
 					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].EndSnapTime = strArr[6]
@@ -431,10 +438,10 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 						continue
 					}
 					conf.ReportSummary.LoadProfile[i].Name = strArr[1]
-					conf.ReportSummary.LoadProfile[i].PerSecond, _ = strconv.ParseFloat(strArr[3], 64)
-					conf.ReportSummary.LoadProfile[i].PerTransaction, _ = strconv.ParseFloat(strArr[5], 64)
-					conf.ReportSummary.LoadProfile[i].PerExec, _ = strconv.ParseFloat(strArr[7], 64)
-					conf.ReportSummary.LoadProfile[i].PerCall, _ = strconv.ParseFloat(strArr[9], 64)
+					conf.ReportSummary.LoadProfile[i].PerSecond = fixDot(strArr[3])
+					conf.ReportSummary.LoadProfile[i].PerTransaction = fixDot(strArr[5])
+					conf.ReportSummary.LoadProfile[i].PerExec = fixDot(strArr[7])
+					conf.ReportSummary.LoadProfile[i].PerCall = fixDot(strArr[9])
 					i++
 				}
 			case "This table displays instance efficiency percentages":
@@ -447,13 +454,13 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 						continue
 					}
 					conf.ReportSummary.InstanceEfficiencyPercentages[i].Name = strArr[1]
-					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value, _ = strconv.ParseFloat(strArr[1], 64)
+					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value = fixDot(strArr[2])
 					i++
 					if strArr[4] == "" {	// last line without content
 						break
 					}
 					conf.ReportSummary.InstanceEfficiencyPercentages[i].Name = strArr[4]
-					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value, _ = strconv.ParseFloat(strArr[5], 64)
+					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value = fixDot(strArr[5])
 					i++
 				}
 			case "This table displays top 10 wait events by total wait time":
@@ -466,10 +473,10 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 						continue
 					}
 					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Event = strArr[1]
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Waits, _ = strconv.ParseFloat(strArr[2], 64)
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].TotalWaitTime, _ = strconv.ParseFloat(strArr[3], 64)
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitAvg, _ = strconv.ParseFloat(strArr[4], 64)
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].PerDBTime, _ = strconv.ParseFloat(strArr[5], 64)
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Waits = fixDot(strArr[2])
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].TotalWaitTime = fixDot(strArr[3])
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitAvg = fixDot(strArr[4])
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].PerDBTime = fixDot(strArr[5])
 					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitClass = strArr[6]
 					i++
 				}
@@ -483,11 +490,11 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 						continue
 					}
 					conf.ReportSummary.WaitClassesByTotalWaitTime[i].WaitClass = strArr[1]
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].Waits, _ = strconv.ParseFloat(strArr[2], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].TotalWaitTime, _ = strconv.ParseFloat(strArr[3], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgWait, _ = strconv.ParseFloat(strArr[4], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].PerDBTime, _ = strconv.ParseFloat(strArr[5], 64)
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgActiveSessions, _ = strconv.ParseFloat(strArr[6], 64)
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].Waits = fixDot(strArr[2])
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].TotalWaitTime= fixDot(strArr[3])
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgWait= fixDot(strArr[4])
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].PerDBTime= fixDot(strArr[5])
+					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgActiveSessions= fixDot(strArr[6])
 					i++
 				}
 
@@ -502,14 +509,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			case "This table displays shared pool statistics":
 			default : continue
 			}
-
-			// fill in our struct
-			/*
-			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
-			conf.OperatingSystemStatistics[i].Value, _ = strconv.ParseFloat(strArr[2], 64)
-			conf.OperatingSystemStatistics[i].EndValue, _ = strconv.ParseFloat(strArr[3], 64)
-			i++
-			*/
 		}
 	}
 }

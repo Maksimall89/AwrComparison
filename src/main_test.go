@@ -57,13 +57,15 @@ func TestCreateMaps(t *testing.T) {
 func TestFixDot(t *testing.T) {
 	type testPair struct {
 		input string
-		output string
+		output float64
 	}
 
 	var tests = []testPair{
-		{"100.00", `100.00`},
-		{"1,041,385", `1041385`},
-		{"78", `78`},
+		{"100.00", 100.00},
+		{"1,041,385", 1041385},
+		{"1,041.7385", 1041.7385},
+		{"78", 78},
+		{"asdasd", 0},
 	}
 
 	for _, pair := range tests {
