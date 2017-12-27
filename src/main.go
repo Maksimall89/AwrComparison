@@ -231,10 +231,11 @@ func readFile(name string) (string, error)  {
 func fixDot(str string) float64{
 	// replace , and .
 	str = strings.Replace(str, ",", "", -1)
+	str = strings.Replace(str, " ", "", -1)
 	// convert type from string to float64
 	val, err := strconv.ParseFloat(str, 64)
 	if err != nil{
-		log.Println(err)
+		// log.Println(err) // TODO edit
 	}
 	return 	val
 }
@@ -497,11 +498,20 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgActiveSessions= fixDot(strArr[6])
 					i++
 				}
-
-				for _, x:= range conf.ReportSummary.WaitClassesByTotalWaitTime{
-					fmt.Println(x)
-				}
 			case "This table displays system load statistics":
+				strArr = regexp.MustCompile(`<tr><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+				conf.ReportSummary.HostCPU = make([]HostCPU, 1) // -3 because last second item not contain information
+				if len(strArr) == 10 {
+					conf.ReportSummary.HostCPU[0].CPUs = fixDot(strArr[1])
+					conf.ReportSummary.HostCPU[0].Cores = fixDot(strArr[2])
+					conf.ReportSummary.HostCPU[0].Sockets= fixDot(strArr[3])
+					conf.ReportSummary.HostCPU[0].LABegin= fixDot(strArr[4])
+					conf.ReportSummary.HostCPU[0].LAEnd= fixDot(strArr[5])
+					conf.ReportSummary.HostCPU[0].PerUser= fixDot(strArr[6])
+					conf.ReportSummary.HostCPU[0].PerSystem= fixDot(strArr[7])
+					conf.ReportSummary.HostCPU[0].PerWIO = fixDot(strArr[8])
+					conf.ReportSummary.HostCPU[0].PerIDLE= fixDot(strArr[9])
+				}
 			case "This table displays CPU usage and wait statistics":
 			case "This table displays IO profile":
 			case "This table displays memory statistics":
