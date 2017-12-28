@@ -684,10 +684,14 @@ func main() {
 	if err != nil{
 		log.Fatal(err)
 	}
-
-	//log.Println(body)
-	//log.Println(maps["SQL ordered by Elapsed Time"])
-
+	// fill in struct
 	parser(&work, maps)
 
+	// print result
+	for _, x := range work.TopSQLWithTopRowSources{
+		fmt.Println(x)
+	}
+
+
+	log.Println("Stop work.")
 }
