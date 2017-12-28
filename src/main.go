@@ -17,6 +17,9 @@ import (
 	"regexp"
 	"errors"
 	"strconv"
+	"net/http"
+	"html/template"
+	"io"
 )
 
 const configFileName  = "config.json"
@@ -206,7 +209,7 @@ type CompleteListOfSQLText struct{
 	SQLID		string
 	SQLText		string
 }
-type worker interface{
+type work interface{
 	tableAnalyzer()
 	sqlAnalyzer()
 }
@@ -642,6 +645,66 @@ func createMaps(textInput string, maps map[string]string) error{
 	}
 	return nil
 }
+// upload logic
+func upload(w http.ResponseWriter, r *http.Request) {
+	// https://astaxie.gitbooks.io/build-web-application-with-golang/en/04.5.html
+
+	var str string
+	fmt.Println("method:", r.Method)
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("template/upload.gtpl")
+		t.Execute(w, nil)
+	} else {
+		r.ParseMultipartForm(32 << 20)
+		file, handler, err := r.FormFile("uploadfile")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer file.Close()
+		str =  "./upload/"+handler.Filename
+		f, err := os.OpenFile(str, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer f.Close()
+		io.Copy(f, file)
+
+		worker(str)
+
+		//fmt.Fprintf(w, "%v", handler.Header)
+		fmt.Fprintf(w, "%s", "Файл успешно загружен")
+	}
+}
+
+func worker (filename string){
+
+	work := MainTable{}
+
+	// read file
+	// TODO check body file
+	body, err := readFile(filename)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	// create map
+	maps := make(map[string]string)
+	err = createMaps(body, maps)
+	if err != nil{
+		log.Fatal(err)
+	}
+	// fill in struct
+	parser(&work, maps)
+
+	// print result
+	for _, x := range work.TopSQLWithTopRowSources{
+		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
+			fmt.Println(x.SQLID)
+		}
+	}
+}
 func main() {
 
 	// configurator for logger
@@ -670,26 +733,11 @@ func main() {
 
 	log.Println("Start work.")
 
-	work := MainTable{}
-
-	// read file
-	body, err := readFile("awr/global_awr_report_111755_111758.html")
-	if err != nil{
-		log.Fatal(err)
-	}
-
-	// create map
-	maps := make(map[string]string)
-	err = createMaps(body, maps)
-	if err != nil{
-		log.Fatal(err)
-	}
-	// fill in struct
-	parser(&work, maps)
-
-	// print result
-	for _, x := range work.TopSQLWithTopRowSources{
-		fmt.Println(x)
+	// start server
+	http.HandleFunc("/", upload) // setting router rule
+	err = http.ListenAndServe(":9090", nil) // setting listening port
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
 	}
 
 
