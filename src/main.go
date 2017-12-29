@@ -650,31 +650,64 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	// https://astaxie.gitbooks.io/build-web-application-with-golang/en/04.5.html
 
 	var str string
-	fmt.Println("method:", r.Method)
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("template/upload.gtpl")
 		t.Execute(w, nil)
 	} else {
 		r.ParseMultipartForm(32 << 20)
+
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal(err)
 		}
 		defer file.Close()
-		str =  "./upload/"+handler.Filename
+		str =  "upload/"+handler.Filename
 		f, err := os.OpenFile(str, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal(err)
 		}
 		defer f.Close()
 		io.Copy(f, file)
 
+		log.Printf("File %s upload.", handler.Filename)
+
 		worker(str)
 
 		//fmt.Fprintf(w, "%v", handler.Header)
+
+		//t := template.New("some template") // Create a template.
+		//t, _ = t.ParseFiles("template/template.gtpl", nil)  // Parse template file.
+		t := template.Must(template.ParseFiles("template/template.gtpl"))
+
+		type Todo struct {
+			Title string
+			Done  bool
+		}
+
+		type TodoPageData struct {
+			PageTitle string
+			Todos     []Todo
+		}
+
+		data := TodoPageData{
+			PageTitle: "My TODO list",
+			Todos: []Todo{
+				{Title: "Task 1", Done: false},
+				{Title: "Task 2", Done: true},
+				{Title: "Task 3", Done: true},
+			},
+		}
+		t.Execute(w, data)  // merge.
+
+
 		fmt.Fprintf(w, "%s", "Файл успешно загружен")
+/*
+		// TODO delete file
+		err = os.Remove(str)
+		if err != nil{
+			log.Fatal(err)
+		}
+*/
 	}
 }
 
@@ -704,6 +737,8 @@ func worker (filename string){
 			fmt.Println(x.SQLID)
 		}
 	}
+
+
 }
 func main() {
 
