@@ -749,21 +749,40 @@ func worker (filename string, dataStruct *PageData){
 	// more like 10
 	for _, y := range work.CompleteListOfSQLText{
 		if (strings.Count(y.SQLText, " LIKE ") > 9) || (strings.Count(y.SQLText, " like ") > 9){
-			dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
-				SQLId: y.SQLID,
-				SQLDescribe: "More like then 10.",
-				SQLText: y.SQLText,
-			} )
+
+			attribute = true
+			for _, x := range dataStruct.ListSQLText{	// if the second item
+				if x.SQLId == y.SQLID{
+					attribute = false
+					break
+				}
+			}
+			if attribute{
+				dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+					SQLId: y.SQLID,
+					SQLDescribe: "More like then 10.",
+					SQLText: y.SQLText,
+				} )
+			}
 		}
 	}
 	// search select *
 	for _, y := range work.CompleteListOfSQLText{
 		if strings.Contains(y.SQLText, "select * from ") || strings.Contains(y.SQLText, "SELECT * FROM "){
-			dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
-				SQLId: y.SQLID,
-				SQLDescribe: `Use: "Select * from"`,
-				SQLText: y.SQLText,
-			} )
+			attribute = true
+			for _, x := range dataStruct.ListSQLText{	// if the second item
+				if x.SQLId == y.SQLID{
+					attribute = false
+					break
+				}
+			}
+			if attribute {
+				dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+					SQLId:       y.SQLID,
+					SQLDescribe: `Use: "Select * from"`,
+					SQLText:     y.SQLText,
+				})
+			}
 		}
 	}
 
