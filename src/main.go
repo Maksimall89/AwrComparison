@@ -647,7 +647,6 @@ func createMaps(textInput string, maps map[string]string) error{
 }
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
-	// https://astaxie.gitbooks.io/build-web-application-with-golang/en/04.5.html
 
 	var str string
 	if r.Method == "GET" {
@@ -698,9 +697,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 		t.Execute(w, data)  // merge.
-
-
-		fmt.Fprintf(w, "%s", "Файл успешно загружен")
+		//fmt.Fprintf(w, "%s", "Файл успешно загружен")
 /*
 		// TODO delete file
 		err = os.Remove(str)
@@ -737,8 +734,6 @@ func worker (filename string){
 			fmt.Println(x.SQLID)
 		}
 	}
-
-
 }
 func main() {
 
