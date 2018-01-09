@@ -247,6 +247,7 @@ func fixDot(str string) float64{
 func parser(conf *MainTable, maps map[string]string) ()  {
 	var textBody []string	// text section
 	var strArr []string	// text line
+	var i int	// count line
 
 	if value, ok := maps["Complete List of SQL Text"]; ok {
 		textBody = regexp.MustCompile(`<a class="awr" name=".+?"></a>`).Split(value, -1)	// split line
@@ -393,12 +394,9 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		}
 	}
 	if value, ok := maps["Report Summary"]; ok {
-
 		var textBodyTwo []string
 		var val string
-		//var strArrItem []string
 		textBody = regexp.MustCompile(`<p />(.*?)<p /><`).Split(value, -1)	// split line
-		//conf.ReportSummary = make(ReportSummary)  // -1 because first line not contain information
 
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`summary="(.*?)"`).FindStringSubmatch(iter) // select item from row
@@ -408,37 +406,36 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 
 			switch strArr[1]{
 			case "This table displays top ADDM findings by average active sessions":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.TopADDMFindingsByAverageActiveSessions = make([]TopADDMFindingsByAverageActiveSessions, (len(textBodyTwo) - 1)) // -1 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].FindingName = strArr[1]
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].AvgActiveSessionsTask = fixDot(strArr[2])
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].PerActiveSessionsFinding = fixDot(strArr[3])
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].TaskName = strArr[4]
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].BeginSnapTime = strArr[5]
-					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions[i].EndSnapTime = strArr[6]
-					i++
+					conf.ReportSummary.TopADDMFindingsByAverageActiveSessions = append(conf.ReportSummary.TopADDMFindingsByAverageActiveSessions, TopADDMFindingsByAverageActiveSessions{
+						FindingName : strArr[1],
+						AvgActiveSessionsTask : fixDot(strArr[2]),
+						PerActiveSessionsFinding : fixDot(strArr[3]),
+						TaskName : strArr[4],
+						BeginSnapTime : strArr[5],
+						EndSnapTime : strArr[6],
+					})
+
 				}
 			case "This table displays load profile":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.LoadProfile = make([]LoadProfile, (len(textBodyTwo) - 1)) // -1 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?):</td><td( align="right")* class='\w+'>\s*(.*?)</td><td( align="right")* class='\w+'>\s*(.*?)</td><td( align="right")* class='\w+'>\s*(.*?)</td><td( align="right")* class='\w+'>\s*(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.LoadProfile[i].Name = strArr[1]
-					conf.ReportSummary.LoadProfile[i].PerSecond = fixDot(strArr[3])
-					conf.ReportSummary.LoadProfile[i].PerTransaction = fixDot(strArr[5])
-					conf.ReportSummary.LoadProfile[i].PerExec = fixDot(strArr[7])
-					conf.ReportSummary.LoadProfile[i].PerCall = fixDot(strArr[9])
-					i++
+					conf.ReportSummary.LoadProfile = append(conf.ReportSummary.LoadProfile, LoadProfile{
+						Name : strArr[1],
+						PerSecond : fixDot(strArr[3]),
+						PerTransaction : fixDot(strArr[5]),
+						PerExec : fixDot(strArr[7]),
+						PerCall : fixDot(strArr[9]),
+					})
 				}
 			case "This table displays instance efficiency percentages":
 				i = 0
@@ -460,38 +457,36 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					i++
 				}
 			case "This table displays top 10 wait events by total wait time":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime = make([]Top10ForegroundEventsByTotalWaitTime, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Event = strArr[1]
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].Waits = fixDot(strArr[2])
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].TotalWaitTime = fixDot(strArr[3])
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitAvg = fixDot(strArr[4])
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].PerDBTime = fixDot(strArr[5])
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime[i].WaitClass = strArr[6]
-					i++
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime = append(conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime, Top10ForegroundEventsByTotalWaitTime{
+						Event : strArr[1],
+						Waits : fixDot(strArr[2]),
+						TotalWaitTime : fixDot(strArr[3]),
+						WaitAvg : fixDot(strArr[4]),
+						PerDBTime : fixDot(strArr[5]),
+						WaitClass : strArr[6],
+					})
 				}
 			case "This table displays wait class statistics ordered by total wait time":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.WaitClassesByTotalWaitTime = make([]WaitClassesByTotalWaitTime, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].WaitClass = strArr[1]
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].Waits = fixDot(strArr[2])
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].TotalWaitTime= fixDot(strArr[3])
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgWait= fixDot(strArr[4])
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].PerDBTime= fixDot(strArr[5])
-					conf.ReportSummary.WaitClassesByTotalWaitTime[i].AvgActiveSessions= fixDot(strArr[6])
-					i++
+					conf.ReportSummary.WaitClassesByTotalWaitTime = append(conf.ReportSummary.WaitClassesByTotalWaitTime, WaitClassesByTotalWaitTime{
+						WaitClass: strArr[1],
+						Waits: fixDot(strArr[2]),
+						TotalWaitTime: fixDot(strArr[3]),
+						AvgWait: fixDot(strArr[4]),
+						PerDBTime: fixDot(strArr[5]),
+						AvgActiveSessions: fixDot(strArr[6]),
+					})
 				}
 			case "This table displays system load statistics":
 				strArr = regexp.MustCompile(`<tr><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td><td align="right" class='awrc'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
@@ -516,34 +511,31 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.InstanceCPU[0].PerDBTimeWaiting= fixDot(strArr[3])
 				}
 			case "This table displays IO profile":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.IOProfile = make([]IOProfile, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.IOProfile[i].Name = strArr[1]
-					conf.ReportSummary.IOProfile[i].RWPerSecond = fixDot(strArr[2])
-					conf.ReportSummary.IOProfile[i].ReadPerSecond= fixDot(strArr[3])
-					conf.ReportSummary.IOProfile[i].WritePerSecond= fixDot(strArr[4])
-					i++
+					conf.ReportSummary.IOProfile = append(conf.ReportSummary.IOProfile, IOProfile{
+						Name: strArr[1],
+						RWPerSecond: fixDot(strArr[2]),
+						ReadPerSecond: fixDot(strArr[3]),
+						WritePerSecond: fixDot(strArr[4]),
+					})
 				}
 			case "This table displays memory statistics":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.MemoryStatistics = make([]MemoryStatistics, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.MemoryStatistics[i].Name = strArr[1]
-					conf.ReportSummary.MemoryStatistics[i].Begin = fixDot(strArr[2])
-					conf.ReportSummary.MemoryStatistics[i].End= fixDot(strArr[3])
-
-					i++
+					conf.ReportSummary.MemoryStatistics = append(conf.ReportSummary.MemoryStatistics, MemoryStatistics{
+						Name: strArr[1],
+						Begin: fixDot(strArr[2]),
+						End: fixDot(strArr[3]),
+					})
 				}
 			case "This table displays cache sizes and other statistics for                     different types of cache":
 				i = 0
@@ -568,18 +560,17 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					i++
 				}
 			case "This table displays shared pool statistics":
-				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.SharedPoolStatistics = make([]SharedPoolStatistics, (len(textBodyTwo) - 1)) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.SharedPoolStatistics[i].Name = strArr[1]
-					conf.ReportSummary.SharedPoolStatistics[i].Begin = fixDot(strArr[2])
-					conf.ReportSummary.SharedPoolStatistics[i].End= fixDot(strArr[3])
-					i++
+					conf.ReportSummary.SharedPoolStatistics = append(conf.ReportSummary.SharedPoolStatistics, SharedPoolStatistics{
+						Name: strArr[1],
+						Begin: fixDot(strArr[2]),
+						End: fixDot(strArr[3]),
+					})
 				}
 
 			default : continue
