@@ -653,6 +653,13 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		defer file.Close()
+
+		// check for upload folder
+		_, err = os.Stat("upload")
+		if os.IsNotExist(err) {
+			os.MkdirAll("upload", os.ModePerm);
+		}
+
 		str =  "upload/"+handler.Filename
 		f, err := os.OpenFile(str, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
@@ -686,6 +693,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 func worker (filename string, dataStruct *PageData){
 
+	var attribute bool
 	work := MainTable{}
 
 	// read file
@@ -711,27 +719,53 @@ func worker (filename string, dataStruct *PageData){
 				if y.SQLID == x.SQLID{
 					dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
 						SQLId: x.SQLID,
-						SQLText: y.SQLText,
 						SQLDescribe: x.RowSource,
+						SQLText: y.SQLText,
 					} )
 				}
 			}
 		}
 	}
 	for _, x := range work.TopSQLWithTopEvents{
-		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
+		if (x.RowSource == "TABLE ACCESS - STORAGE FULL"){
+			attribute = true
+			for _, y := range dataStruct.ListSQLText{	// if the second item
+				if y.SQLId == x.SQLID{
+					attribute = false
+					break
+				}
+			}
 			for _, y := range work.CompleteListOfSQLText{
-				if y.SQLID == x.SQLID{
+				if (y.SQLID == x.SQLID) && attribute{
 					dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
 						SQLId: x.SQLID,
-						SQLText: y.SQLText,
 						SQLDescribe: x.RowSource,
+						SQLText: y.SQLText,
 					} )
 				}
 			}
 		}
 	}
-
+	// more like 10
+	for _, y := range work.CompleteListOfSQLText{
+		if (strings.Count(y.SQLText, " LIKE ") > 9) || (strings.Count(y.SQLText, " like ") > 9){
+			dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+				SQLId: y.SQLID,
+				SQLDescribe: "More like then 10.",
+				SQLText: y.SQLText,
+			} )
+		}
+	}
+	// search select *
+	for _, y := range work.CompleteListOfSQLText{
+		if strings.Contains(y.SQLText, "select * from ") || strings.Contains(y.SQLText, "SELECT * FROM "){
+			dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+				SQLId: y.SQLID,
+				SQLDescribe: `Use: "Select * from"`,
+				SQLText: y.SQLText,
+			} )
+		}
+	}
 
 
 }
