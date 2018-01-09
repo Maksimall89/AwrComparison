@@ -247,24 +247,23 @@ func fixDot(str string) float64{
 func parser(conf *MainTable, maps map[string]string) ()  {
 	var textBody []string	// text section
 	var strArr []string	// text line
-	var i int	// counter
 
 	if value, ok := maps["Complete List of SQL Text"]; ok {
 		textBody = regexp.MustCompile(`<a class="awr" name=".+?"></a>`).Split(value, -1)	// split line
-		conf.CompleteListOfSQLText = make([]CompleteListOfSQLText, (len(textBody) - 3)) // -3 because last second item not contain information
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`(.+?)</td><td class='\w+'>(.+?)</td>`).FindStringSubmatch(iter) // select item from row
 			if len(strArr) == 0 {	// if we can't select to next line
 				continue
 			}
 			// fill in our struct
-			conf.CompleteListOfSQLText[i].SQLID = strArr[1]
-			conf.CompleteListOfSQLText[i].SQLText = strArr[2]
-			i++
+			conf.CompleteListOfSQLText = append(conf.CompleteListOfSQLText, CompleteListOfSQLText{
+				SQLID:  strArr[1],
+				SQLText:  strArr[2],
+			})
 		}
 	}
 	if value, ok := maps["SQL ordered by Elapsed Time"]; ok {
-		i = 0
+
 		//textBody := regexp.MustCompile(`<tr><td align`).Split(value, -1)	// split line
 		textBody =  strings.Split(value, `<tr><td align="right" `)                     // split line
 		conf.SQLOrderByElapsedTime = make([]SQLOrderByElapsedTime, (len(textBody) -1)) // -1 because first line not contain information
@@ -276,16 +275,17 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderByElapsedTime[i].ElapsedTime = fixDot(strArr[1])
-			conf.SQLOrderByElapsedTime[i].Executions = fixDot(strArr[2])
-			conf.SQLOrderByElapsedTime[i].ElapsedTimePerExec = fixDot(strArr[3])
-			conf.SQLOrderByElapsedTime[i].Total = fixDot(strArr[4])
-			conf.SQLOrderByElapsedTime[i].Cpu = fixDot(strArr[5])
-			conf.SQLOrderByElapsedTime[i].IO = fixDot(strArr[6])
-			conf.SQLOrderByElapsedTime[i].SQLID = strArr[7]
-			conf.SQLOrderByElapsedTime[i].SQLModule = strArr[8]
-			conf.SQLOrderByElapsedTime[i].SQLText = strArr[9]
-			i++
+			conf.SQLOrderByElapsedTime = append(conf.SQLOrderByElapsedTime, SQLOrderByElapsedTime{
+				ElapsedTime: fixDot(strArr[1]),
+				Executions:  fixDot(strArr[2]),
+				ElapsedTimePerExec: fixDot(strArr[3]),
+				Total: fixDot(strArr[4]),
+				Cpu: fixDot(strArr[5]),
+				IO: fixDot(strArr[6]),
+				SQLID: strArr[7],
+				SQLModule: strArr[8],
+				SQLText: strArr[9],
+			})
 		}
 	}
 	if value, ok := maps["SQL ordered by CPU Time"]; ok {
@@ -645,6 +645,18 @@ func createMaps(textInput string, maps map[string]string) error{
 	}
 	return nil
 }
+
+// struct logic
+type ListSQLText struct {
+	SQLId 		string
+	SQLDescribe string
+	SQLText		string
+}
+
+type PageData struct {
+	PageTitle string
+	ListSQLText []ListSQLText
+}
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
 
@@ -670,32 +682,15 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("File %s upload.", handler.Filename)
 
-		worker(str)
+		data := PageData{}
+		data.PageTitle = "Test"
+
+	 	worker(str, &data)
 
 		//fmt.Fprintf(w, "%v", handler.Header)
 
-		//t := template.New("some template") // Create a template.
-		//t, _ = t.ParseFiles("template/template.gtpl", nil)  // Parse template file.
 		t := template.Must(template.ParseFiles("template/template.gtpl"))
 
-		type Todo struct {
-			Title string
-			Done  bool
-		}
-
-		type TodoPageData struct {
-			PageTitle string
-			Todos     []Todo
-		}
-
-		data := TodoPageData{
-			PageTitle: "My TODO list",
-			Todos: []Todo{
-				{Title: "Task 1", Done: false},
-				{Title: "Task 2", Done: true},
-				{Title: "Task 3", Done: true},
-			},
-		}
 		t.Execute(w, data)  // merge.
 		//fmt.Fprintf(w, "%s", "Файл успешно загружен")
 /*
@@ -708,7 +703,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func worker (filename string){
+func worker (filename string, dataStruct *PageData){
 
 	work := MainTable{}
 
@@ -731,9 +726,20 @@ func worker (filename string){
 	// print result
 	for _, x := range work.TopSQLWithTopRowSources{
 		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
-			fmt.Println(x.SQLID)
+			for _, y := range work.CompleteListOfSQLText{
+				if y.SQLID == x.SQLID{
+					dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+						SQLId: x.SQLID,
+						SQLText: y.SQLText,
+						SQLDescribe: x.RowSource,
+					} )
+				}
+			}
 		}
 	}
+
+
+
 }
 func main() {
 
