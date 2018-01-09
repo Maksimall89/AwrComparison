@@ -704,8 +704,21 @@ func worker (filename string, dataStruct *PageData){
 	// fill in struct
 	parser(&work, maps)
 
-	// print result
+	// search TABLE ACCESS - STORAGE FULL
 	for _, x := range work.TopSQLWithTopRowSources{
+		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
+			for _, y := range work.CompleteListOfSQLText{
+				if y.SQLID == x.SQLID{
+					dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+						SQLId: x.SQLID,
+						SQLText: y.SQLText,
+						SQLDescribe: x.RowSource,
+					} )
+				}
+			}
+		}
+	}
+	for _, x := range work.TopSQLWithTopEvents{
 		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
 			for _, y := range work.CompleteListOfSQLText{
 				if y.SQLID == x.SQLID{

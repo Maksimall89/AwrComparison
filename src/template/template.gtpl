@@ -3,7 +3,6 @@
     <title>Something here {{.PageTitle}}</title>
 </head>
 <body>
-<h1>{{.PageTitle}}<h1>
 <table class="table" border=1>
 <caption>List SQL Text</caption>
   <thead>
