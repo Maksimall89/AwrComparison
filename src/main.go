@@ -289,10 +289,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		}
 	}
 	if value, ok := maps["SQL ordered by CPU Time"]; ok {
-		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)                 // split line
-		conf.SQLOrderedByCPUTime = make([]SQLOrderedByCPUTime, (len(textBody) -1)) // -1 because first line not contain information
-
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
 
@@ -300,24 +297,22 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderedByCPUTime[i].CPUTime = fixDot(strArr[1])
-			conf.SQLOrderedByCPUTime[i].Executions = fixDot(strArr[2])
-			conf.SQLOrderedByCPUTime[i].CPUPerExec = fixDot(strArr[3])
-			conf.SQLOrderedByCPUTime[i].Total = fixDot(strArr[4])
-			conf.SQLOrderedByCPUTime[i].ElapsedTime = fixDot(strArr[5])
-			conf.SQLOrderedByCPUTime[i].CPU = fixDot(strArr[6])
-			conf.SQLOrderedByCPUTime[i].IO = fixDot(strArr[7])
-			conf.SQLOrderedByCPUTime[i].SQLID = strArr[8]
-			conf.SQLOrderedByCPUTime[i].SQLModule = strArr[9]
-			conf.SQLOrderedByCPUTime[i].SQLText = strArr[10]
-			i++
+			conf.SQLOrderedByCPUTime = append(conf.SQLOrderedByCPUTime, SQLOrderedByCPUTime{
+				CPUTime : fixDot(strArr[1]),
+				Executions: fixDot(strArr[2]),
+				CPUPerExec : fixDot(strArr[3]),
+				Total : fixDot(strArr[4]),
+				ElapsedTime : fixDot(strArr[5]),
+				CPU : fixDot(strArr[6]),
+				IO : fixDot(strArr[7]),
+				SQLID : strArr[8],
+				SQLModule : strArr[9],
+				SQLText : strArr[10],
+			})
 		}
 	}
 	if value, ok := maps["SQL ordered by User I/O Wait Time"]; ok {
-		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)                               // split line
-		conf.SQLOrderedByUserIOWaitTime = make([]SQLOrderedByUserIOWaitTime, (len(textBody) -1)) // -1 because first line not contain information
-
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
 
@@ -325,24 +320,22 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.SQLOrderedByUserIOWaitTime[i].UserIOTime = fixDot(strArr[1])
-			conf.SQLOrderedByUserIOWaitTime[i].Executions = fixDot(strArr[2])
-			conf.SQLOrderedByUserIOWaitTime[i].UIOPerExec = fixDot(strArr[3])
-			conf.SQLOrderedByUserIOWaitTime[i].Total = fixDot(strArr[4])
-			conf.SQLOrderedByUserIOWaitTime[i].ElapsedTime = fixDot(strArr[5])
-			conf.SQLOrderedByUserIOWaitTime[i].Cpu = fixDot(strArr[6])
-			conf.SQLOrderedByUserIOWaitTime[i].IO = fixDot(strArr[7])
-			conf.SQLOrderedByUserIOWaitTime[i].SQLID = strArr[8]
-			conf.SQLOrderedByUserIOWaitTime[i].SQLModule = strArr[9]
-			conf.SQLOrderedByUserIOWaitTime[i].SQLText = strArr[10]
-			i++
+			conf.SQLOrderedByUserIOWaitTime = append(conf.SQLOrderedByUserIOWaitTime, SQLOrderedByUserIOWaitTime{
+				UserIOTime : fixDot(strArr[1]),
+				Executions : fixDot(strArr[2]),
+				UIOPerExec : fixDot(strArr[3]),
+				Total : fixDot(strArr[4]),
+				ElapsedTime : fixDot(strArr[5]),
+				Cpu : fixDot(strArr[6]),
+				IO : fixDot(strArr[7]),
+				SQLID : strArr[8],
+				SQLModule : strArr[9],
+				SQLText : strArr[10],
+			})
 		}
 	}
 	if value, ok := maps["Top SQL with Top Events"]; ok {
-		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
-		conf.TopSQLWithTopEvents = make([]TopSQLWithTopEvents, (len(textBody) -1))  // -1 because first line not contain information
-
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
 
@@ -350,56 +343,53 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				continue
 			}
 			// fill in our struct
-			conf.TopSQLWithTopEvents[i].SQLID = strArr[1]
-			conf.TopSQLWithTopEvents[i].PlanHash = fixDot(strArr[2])
-			conf.TopSQLWithTopEvents[i].Executions = fixDot(strArr[3])
-			conf.TopSQLWithTopEvents[i].Activity = fixDot(strArr[4])
-			conf.TopSQLWithTopEvents[i].Event = strArr[5]
-			conf.TopSQLWithTopEvents[i].EventPer = fixDot(strArr[6])
-			conf.TopSQLWithTopEvents[i].RowSource = strArr[7]
-			conf.TopSQLWithTopEvents[i].RowSourcePer = fixDot(strArr[8])
-			conf.TopSQLWithTopEvents[i].SQLText = strArr[9]
-			i++
+			conf.TopSQLWithTopEvents = append(conf.TopSQLWithTopEvents, TopSQLWithTopEvents{
+				SQLID : strArr[1],
+				PlanHash : fixDot(strArr[2]),
+				Executions : fixDot(strArr[3]),
+				Activity : fixDot(strArr[4]),
+				Event : strArr[5],
+				EventPer : fixDot(strArr[6]),
+				RowSource : strArr[7],
+				RowSourcePer : fixDot(strArr[8]),
+				SQLText : strArr[9],
+			})
 		}
 	}
 	if value, ok := maps["Top SQL with Top Row Sources"]; ok {
-		i = 0
 		textBody =  strings.Split(value, `<tr><td align="right" `)// split line
-		conf.TopSQLWithTopRowSources = make([]TopSQLWithTopRowSources, (len(textBody) -1))  // -1 because first line not contain information
-
-		for _, iter := range textBody{
+		for _, iter := range textBody {
 			strArr = regexp.MustCompile(`class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
-			if len(strArr) == 0 {	// if we can't select to next line
+			if len(strArr) == 0 { // if we can't select to next line
 				continue
 			}
 			// fill in our struct
-			conf.TopSQLWithTopRowSources[i].SQLID = strArr[1]
-			conf.TopSQLWithTopRowSources[i].PlanHash = fixDot(strArr[2])
-			conf.TopSQLWithTopRowSources[i].Executions = fixDot(strArr[3])
-			conf.TopSQLWithTopRowSources[i].Activity = fixDot(strArr[4])
-			conf.TopSQLWithTopRowSources[i].RowSource = strArr[5]
-			conf.TopSQLWithTopRowSources[i].RowSourcePer = fixDot(strArr[6])
-			conf.TopSQLWithTopRowSources[i].TopEvent = strArr[7]
-			conf.TopSQLWithTopRowSources[i].EventPer = fixDot(strArr[8])
-			conf.TopSQLWithTopRowSources[i].SQLText = strArr[9]
-			i++
+			conf.TopSQLWithTopRowSources = append(conf.TopSQLWithTopRowSources, TopSQLWithTopRowSources{
+				SQLID : strArr[1],
+				PlanHash : fixDot(strArr[2]),
+				Executions : fixDot(strArr[3]),
+				Activity : fixDot(strArr[4]),
+				RowSource : strArr[5],
+				RowSourcePer : fixDot(strArr[6]),
+				TopEvent : strArr[7],
+				EventPer : fixDot(strArr[8]),
+				SQLText : strArr[9],
+			})
 		}
 	}
 	if value, ok := maps["Operating System Statistics"]; ok {
-		i = 0
 		textBody =  strings.Split(value, `<tr><td scope="row" `)// split line
-		conf.OperatingSystemStatistics = make([]OperatingSystemStatistics, (len(textBody) -1))  // -1 because first line not contain information
-
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.+?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.+?)</td></tr>`).FindStringSubmatch(iter) // select item from row
 			if len(strArr) == 0 {	// if we can't select to next line
 				continue
 			}
 			// fill in our struct
-			conf.OperatingSystemStatistics[i].Statistic = strArr[1]
-			conf.OperatingSystemStatistics[i].Value = fixDot(strArr[2])
-			conf.OperatingSystemStatistics[i].EndValue = fixDot(strArr[3])
-			i++
+			conf.OperatingSystemStatistics = append(conf.OperatingSystemStatistics, OperatingSystemStatistics{
+				Statistic : strArr[1],
+				Value : fixDot(strArr[2]),
+				EndValue : fixDot(strArr[3]),
+			})
 		}
 	}
 	if value, ok := maps["Report Summary"]; ok {
