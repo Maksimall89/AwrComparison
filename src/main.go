@@ -712,6 +712,9 @@ func worker (filename string, dataStruct *PageData){
 	// fill in struct
 	parser(&work, maps)
 
+	// TODO SQL ordered by Elapsed Time
+	// TODO SQL ordered by CPU Time
+
 	// search TABLE ACCESS - STORAGE FULL
 	for _, x := range work.TopSQLWithTopRowSources{
 		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
@@ -749,7 +752,6 @@ func worker (filename string, dataStruct *PageData){
 	// more like 10
 	for _, y := range work.CompleteListOfSQLText{
 		if (strings.Count(y.SQLText, " LIKE ") > 9) || (strings.Count(y.SQLText, " like ") > 9){
-
 			attribute = true
 			for _, x := range dataStruct.ListSQLText{	// if the second item
 				if x.SQLId == y.SQLID{
@@ -785,8 +787,6 @@ func worker (filename string, dataStruct *PageData){
 			}
 		}
 	}
-
-
 }
 func main() {
 
