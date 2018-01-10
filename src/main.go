@@ -665,29 +665,27 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
-		io.Copy(f, file)
 
+		defer f.Close()
+		defer os.Remove("upload/"+handler.Filename)	// delete file
+
+		io.Copy(f, file)
 		log.Printf("File %s upload.", handler.Filename)
 
 		data := PageData{}
 		data.PageTitle = "Test"
 
 	 	worker(str, &data)
+		log.Printf("File %s is processed.", handler.Filename)
 
-		//fmt.Fprintf(w, "%v", handler.Header)
+		//fmt.Fprintf(w,"%v", handler.Header)
 
 		t := template.Must(template.ParseFiles("template/template.gtpl"))
-
 		t.Execute(w, data)  // merge.
-		//fmt.Fprintf(w, "%s", "Файл успешно загружен")
-/*
-		// TODO delete file
-		err = os.Remove(str)
-		if err != nil{
-			log.Fatal(err)
-		}
-*/
+		log.Printf("File %s printed.", handler.Filename)
+
+		data = PageData{}	// clear struct
+
 	}
 }
 
@@ -751,7 +749,7 @@ func worker (filename string, dataStruct *PageData){
 	}
 	// more like 10
 	for _, y := range work.CompleteListOfSQLText{
-		if (strings.Count(y.SQLText, " LIKE ") > 9) || (strings.Count(y.SQLText, " like ") > 9){
+		if strings.Count(strings.ToLower(y.SQLText), " like ") > 9{
 			attribute = true
 			for _, x := range dataStruct.ListSQLText{	// if the second item
 				if x.SQLId == y.SQLID{
@@ -770,7 +768,7 @@ func worker (filename string, dataStruct *PageData){
 	}
 	// search select *
 	for _, y := range work.CompleteListOfSQLText{
-		if strings.Contains(y.SQLText, "select * from ") || strings.Contains(y.SQLText, "SELECT * FROM "){
+		if strings.Contains(strings.ToLower(y.SQLText), "select * from ") {
 			attribute = true
 			for _, x := range dataStruct.ListSQLText{	// if the second item
 				if x.SQLId == y.SQLID{

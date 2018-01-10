@@ -3,6 +3,7 @@
     <title>Something here {{.PageTitle}}</title>
 </head>
 <body>
+<a name="top"></a>
 <table class="table" border=1>
 <caption>List SQL Text</caption>
   <thead>
@@ -23,8 +24,8 @@
   </tbody>
 </table>
 
-
-<h2><a href="/">Back to the main page.</a></h2>
+<p><a href="#top">Наверх</a></p>
+<p><a href="/">Back to the main page.</a></p>
 
 <ul>
     {{range .Todos}}
