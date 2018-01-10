@@ -4,8 +4,13 @@
 </head>
 <body>
 <a name="top"></a>
+<ul>
+    {{range .ListSQLText}}
+        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> - {{.SQLDescribe}};</li>
+    {{end}}
+</ul>
 <table class="table" border=1>
-<caption>List SQL Text</caption>
+<caption>Список запросов содержащих TABLE ACCESS - STORAGE FULL или запросы со множейством like или выборкой по всем столбцам с помощью "select *".</caption>
   <thead>
 	<tr>
 		<th>SQLId</th>
@@ -16,7 +21,7 @@
   <tbody>
      {{range .ListSQLText}}
         <tr>
-            <td>{{.SQLId}}</td>
+            <td><a name="{{.SQLId}}"></a>{{.SQLId}}</td>
             <td>{{.SQLDescribe}}</td>
             <td>{{.SQLText}}</td>
         </tr>

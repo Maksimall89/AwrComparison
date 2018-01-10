@@ -209,11 +209,6 @@ type CompleteListOfSQLText struct{
 	SQLID		string
 	SQLText		string
 }
-type work interface{
-	tableAnalyzer()
-	sqlAnalyzer()
-}
-
 // reading text from a file
 func readFile(name string) (string, error)  {
 	var body string	// all text awr html
@@ -267,7 +262,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 
 		//textBody := regexp.MustCompile(`<tr><td align`).Split(value, -1)	// split line
 		textBody =  strings.Split(value, `<tr><td align="right" `)                     // split line
-		conf.SQLOrderByElapsedTime = make([]SQLOrderByElapsedTime, (len(textBody) -1)) // -1 because first line not contain information
+		conf.SQLOrderByElapsedTime = make([]SQLOrderByElapsedTime, len(textBody) -1) // -1 because first line not contain information
 
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
@@ -440,7 +435,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			case "This table displays instance efficiency percentages":
 				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.InstanceEfficiencyPercentages = make([]InstanceEfficiencyPercentages, (len(textBodyTwo)*2 - 3)) // -3 because last second item not contain information
+				conf.ReportSummary.InstanceEfficiencyPercentages = make([]InstanceEfficiencyPercentages, len(textBodyTwo)*2 - 3) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>\s*(.*?)</td>(<td class='\w+'>(.*?):</td><td align="right" class='\w+'>\s*(.*?)</td>)*</tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
@@ -540,7 +535,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			case "This table displays cache sizes and other statistics for                     different types of cache":
 				i = 0
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
-				conf.ReportSummary.CacheSizes = make([]CacheSizes, (len(textBodyTwo)*2 - 3)) // -3 because last second item not contain information
+				conf.ReportSummary.CacheSizes = make([]CacheSizes, len(textBodyTwo)*2 - 3) // -3 because last second item not contain information
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?):</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td>(<td class='\w+'>(.*?):</td><td align="right" class='\w+'>(.*?)</td>)*</tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
@@ -577,18 +572,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 			}
 		}
 	}
-}
-// TODO анализатор таблиц
-func tableAnalyzer(){
-
-}
-// TODO анализатор не оптимальных запросов
-func sqlAnalyzer()  {
-
-}
-// TODO web-server с загрузкой лога через веб морду и выводом информации по логу на экран
-func server()  {
-
 }
 func (conf *Config) init() {
 	//init configuration
@@ -635,29 +618,38 @@ type ListSQLText struct {
 }
 
 type PageData struct {
-	PageTitle string
-	ListSQLText []ListSQLText
+	PageTitle           string
+	AttributeUploadFile bool
+	ListSQLText         []ListSQLText
 }
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
 
 	var str string
+	data := PageData{}
+	data.PageTitle = "Test"
+
+	data.AttributeUploadFile = true
+
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("template/upload.gtpl")
-		t.Execute(w, nil)
+		t.Execute(w, data)
 	} else {
 		r.ParseMultipartForm(32 << 20)
-
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("ERROR: %s",err)
+			t, _ := template.ParseFiles("template/upload.gtpl")
+			data.AttributeUploadFile =  false
+			t.Execute(w, data)
+			return
 		}
 		defer file.Close()
 
 		// check for upload folder
 		_, err = os.Stat("upload")
 		if os.IsNotExist(err) {
-			os.MkdirAll("upload", os.ModePerm);
+			os.MkdirAll("upload", 0666);
 		}
 
 		str =  "upload/"+handler.Filename
@@ -672,9 +664,6 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		io.Copy(f, file)
 		log.Printf("File %s upload.", handler.Filename)
 
-		data := PageData{}
-		data.PageTitle = "Test"
-
 	 	worker(str, &data)
 		log.Printf("File %s is processed.", handler.Filename)
 
@@ -683,10 +672,9 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		t := template.Must(template.ParseFiles("template/template.gtpl"))
 		t.Execute(w, data)  // merge.
 		log.Printf("File %s printed.", handler.Filename)
-
-		data = PageData{}	// clear struct
-
 	}
+
+	data = PageData{}	// TODO clear struct
 }
 
 func worker (filename string, dataStruct *PageData){
@@ -714,74 +702,74 @@ func worker (filename string, dataStruct *PageData){
 	// TODO SQL ordered by CPU Time
 
 	// search TABLE ACCESS - STORAGE FULL
-	for _, x := range work.TopSQLWithTopRowSources{
-		if x.RowSource == "TABLE ACCESS - STORAGE FULL"{
-			for _, y := range work.CompleteListOfSQLText{
-				if y.SQLID == x.SQLID{
+	for _, sqlText := range work.TopSQLWithTopRowSources {
+		if sqlText.RowSource == "TABLE ACCESS - STORAGE FULL" {
+			for _, iter := range work.CompleteListOfSQLText{
+				if iter.SQLID == sqlText.SQLID {
 					dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
-						SQLId: x.SQLID,
-						SQLDescribe: x.RowSource,
-						SQLText: y.SQLText,
+						SQLId:       sqlText.SQLID,
+						SQLDescribe: sqlText.RowSource,
+						SQLText:     iter.SQLText,
 					} )
 				}
 			}
 		}
 	}
-	for _, x := range work.TopSQLWithTopEvents{
-		if (x.RowSource == "TABLE ACCESS - STORAGE FULL"){
+	for _, sqlText := range work.TopSQLWithTopEvents {
+		if sqlText.RowSource == "TABLE ACCESS - STORAGE FULL" {
 			attribute = true
-			for _, y := range dataStruct.ListSQLText{	// if the second item
-				if y.SQLId == x.SQLID{
+			for _, iter := range dataStruct.ListSQLText{ // if the second item
+				if iter.SQLId == sqlText.SQLID {
 					attribute = false
 					break
 				}
 			}
-			for _, y := range work.CompleteListOfSQLText{
-				if (y.SQLID == x.SQLID) && attribute{
+			for _, iter := range work.CompleteListOfSQLText{
+				if (iter.SQLID == sqlText.SQLID) && attribute {
 					dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
-						SQLId: x.SQLID,
-						SQLDescribe: x.RowSource,
-						SQLText: y.SQLText,
+						SQLId:       sqlText.SQLID,
+						SQLDescribe: sqlText.RowSource,
+						SQLText:     iter.SQLText,
 					} )
 				}
 			}
 		}
 	}
-	// more like 10
-	for _, y := range work.CompleteListOfSQLText{
-		if strings.Count(strings.ToLower(y.SQLText), " like ") > 9{
-			attribute = true
-			for _, x := range dataStruct.ListSQLText{	// if the second item
-				if x.SQLId == y.SQLID{
-					attribute = false
-					break
-				}
-			}
-			if attribute{
-				dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
-					SQLId: y.SQLID,
-					SQLDescribe: "More like then 10.",
-					SQLText: y.SQLText,
-				} )
-			}
-		}
-	}
-	// search select *
-	for _, y := range work.CompleteListOfSQLText{
-		if strings.Contains(strings.ToLower(y.SQLText), "select * from ") {
-			attribute = true
-			for _, x := range dataStruct.ListSQLText{	// if the second item
-				if x.SQLId == y.SQLID{
+
+	for _, sqlText := range work.CompleteListOfSQLText {
+		attribute = true
+		// more like 10
+		if strings.Count(strings.ToLower(sqlText.SQLText), " like ") > 9 {
+			for _, iter := range dataStruct.ListSQLText { // if the second item
+				if iter.SQLId == sqlText.SQLID{
 					attribute = false
 					break
 				}
 			}
 			if attribute {
 				dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
-					SQLId:       y.SQLID,
+					SQLId:       sqlText.SQLID,
+					SQLDescribe: "More like then 10.",
+					SQLText:     sqlText.SQLText,
+				} )
+				continue
+			}
+		}
+		// search select * from
+		if strings.Contains(strings.ToLower(sqlText.SQLText), "select * from ") {
+			for _, iter := range dataStruct.ListSQLText { // if the second item
+				if iter.SQLId == sqlText.SQLID {
+					attribute = false
+					break
+				}
+			}
+			if attribute {
+				dataStruct.ListSQLText = append(dataStruct.ListSQLText, ListSQLText{
+					SQLId:       sqlText.SQLID,
 					SQLDescribe: `Use: "Select * from"`,
-					SQLText:     y.SQLText,
+					SQLText:     sqlText.SQLText,
 				})
+				continue
 			}
 		}
 	}
@@ -794,7 +782,7 @@ func main() {
 	// check what folder log is exist
 	_, err := os.Stat(str)
 	if os.IsNotExist(err) {
-		os.MkdirAll(str, os.ModePerm);
+		os.MkdirAll(str, 0666);
 	}
 	str =  fmt.Sprintf("%s/%d-%02d-%02d-%02d-%02d-%02d-logFile.log", str, time.Now().Year(),time.Now().Month(),time.Now().Day(),time.Now().Hour(), time.Now().Minute(), time.Now().Second())
 	// open a file
