@@ -3,7 +3,7 @@
        <title>Upload file AWR</title>
 </head>
 <body>
-{{if .Attribute}}
+{{if .AttributeUploadFile}}
     <p>Форма для загрузки файлов AWR.</p>
 {{else}}
     <p>Вы не загрузили AWR файл. Форма для загрузки файлов AWR.</p>

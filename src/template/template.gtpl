@@ -4,13 +4,14 @@
 </head>
 <body>
 <a name="top"></a>
+<p>Список SQLID тяжелых запросов:</p>
 <ul>
     {{range .ListSQLText}}
-        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> - {{.SQLDescribe}};</li>
+        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> — {{.SQLDescribe}};</li>
     {{end}}
 </ul>
-<table class="table" border=1>
-<caption>Список запросов содержащих TABLE ACCESS - STORAGE FULL или запросы со множейством like или выборкой по всем столбцам с помощью "select *".</caption>
+<p>Список запросов содержащих TABLE ACCESS - STORAGE FULL или запросы со множейством like или выборкой по всем столбцам с помощью "select *".</p>
+<table class="table" border=1 background="#001100">
   <thead>
 	<tr>
 		<th>SQLId</th>
@@ -31,16 +32,5 @@
 
 <p><a href="#top">Наверх</a></p>
 <p><a href="/">Back to the main page.</a></p>
-
-<ul>
-    {{range .Todos}}
-        {{if .Done}}
-            <li class="done">{{.Title}}</li>
-        {{else}}
-            <li>{{.Title}}</li>
-        {{end}}
-    {{end}}
-</ul>
-
 </body>
 </html>
