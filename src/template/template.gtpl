@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>Something here {{.PageTitle}}</title>
@@ -11,7 +12,7 @@
     {{end}}
 </ul>
 <p>Список запросов содержащих TABLE ACCESS - STORAGE FULL или запросы со множейством like или выборкой по всем столбцам с помощью "select *".</p>
-<table class="table" border=1 background="#001100">
+<table class="table" border=1 bgcolor="#71bc78">
   <thead>
 	<tr>
 		<th>SQLId</th>

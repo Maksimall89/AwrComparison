@@ -5,6 +5,7 @@ package main
 	https://habrahabr.ru/post/189574/
 	http://www.sql.ru/blogs/oracleandsql/2097
 	http://www.dbas-oracle.com/2013/05/10-steps-to-analyze-awr-report-in-oracle.html
+	https://studfiles.net/preview/2426969/page:12/
 */
 import (
 	"log"
@@ -43,7 +44,7 @@ type ReportSummary struct{
 	TopADDMFindingsByAverageActiveSessions	[]TopADDMFindingsByAverageActiveSessions
 	LoadProfile								[]LoadProfile
 	InstanceEfficiencyPercentages			[]InstanceEfficiencyPercentages
-	Top10ForegroundEventsByTotalWaitTime	[]Top10ForegroundEventsByTotalWaitTime
+	Top10ForegroundEventsByTotalWaitTime	[]TopForegroundEventsByTotalWaitTime
 	WaitClassesByTotalWaitTime				[]WaitClassesByTotalWaitTime
 	HostCPU 								[]HostCPU
 	InstanceCPU 							[]InstanceCPU
@@ -70,12 +71,12 @@ type LoadProfile struct{
 	PerCall			float64
 }
 // Instance Efficiency Percentages (Target 100%)
-type InstanceEfficiencyPercentages struct{
+type InstanceEfficiencyPercentages struct{ // TODO перейти на map[string]float64
 	Name	string
 	Value	float64
 }
 //Top 10 Foreground Events by Total Wait Time
-type Top10ForegroundEventsByTotalWaitTime struct{
+type TopForegroundEventsByTotalWaitTime struct{
 	Event			string
 	Waits 			float64
 	TotalWaitTime 	float64
@@ -451,14 +452,14 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 					conf.ReportSummary.InstanceEfficiencyPercentages[i].Value = fixDot(strArr[5])
 					i++
 				}
-			case "This table displays top 10 wait events by total wait time":
+			case "This table displays top 10 wait events by total wait time":	// TODO This table displays top 5, 6, 10 wait events by total wait time
 				textBodyTwo = regexp.MustCompile(`<tr><td scope="row" class='\w+'>`).Split(iter, -1)// split line
 				for _, val = range textBodyTwo{
 					strArr = regexp.MustCompile(`(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(val) // select item from row
 					if len(strArr) == 0 {	// if we can't select to next line
 						continue
 					}
-					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime = append(conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime, Top10ForegroundEventsByTotalWaitTime{
+					conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime = append(conf.ReportSummary.Top10ForegroundEventsByTotalWaitTime, TopForegroundEventsByTotalWaitTime{
 						Event : strArr[1],
 						Waits : fixDot(strArr[2]),
 						TotalWaitTime : fixDot(strArr[3]),
@@ -620,6 +621,9 @@ type ListSQLText struct {
 type PageData struct {
 	PageTitle           string
 	AttributeUploadFile bool
+	NonParseCPU 		string	// Instance Efficiency Percentages
+	ParseCPUElapsd 		string	// Parse CPU to Parse Elapsd %
+	SoftParse 			string	// Soft Parse % %
 	ListSQLText         []ListSQLText
 }
 // upload logic
@@ -773,6 +777,36 @@ func worker (filename string, dataStruct *PageData){
 			}
 		}
 	}
+
+	// Instance Efficiency Percentages (Target 100%)
+	for _, iter := range work.ReportSummary.InstanceEfficiencyPercentages{
+		if iter.Name == "% Non-Parse CPU"{
+			if iter.Value >= 90 {
+				dataStruct.NonParseCPU = fmt.Sprintf("Большинство ресурсов ЦП %v используется в различных операциях IO, почти отсутсвует парсинг(hard, soft, soft cursor cache hit), что говорит о правильной работе базы данных.",iter.Value)
+			}else {
+				dataStruct.NonParseCPU = fmt.Sprintf("Большинство ресурсов ЦП %v тратится на парстинг.", iter.Value)
+			}
+			continue
+		}
+		if iter.Name=="Parse CPU to Parse Elapsd %" {
+			if iter.Value >= 90{
+				dataStruct.ParseCPUElapsd = fmt.Sprintf("ЦП %v не ожидает ресурсов, что говорит о правильной работе базы данных.",iter.Value)
+			}else{
+				dataStruct.ParseCPUElapsd = fmt.Sprintf("Большинство ресурсов ЦП %v тратится на ожидание ресурсов.",iter.Value)
+			}
+			continue
+		}
+		if iter.Name=="Soft Parse %" {
+			dataStruct.SoftParse = fmt.Sprintf("Вы используйте Soft Parse на уровне %%v. Если же вы делаете один Hard Parse, а затем последующие execute идут уже без парсинга, то данный показатель будет очень низкий. ",iter.Value)
+			continue
+		}
+	}
+	// Load Profile
+	// Top 10 Foreground Events by Total Wait Time
+	// Shared Pool Statistics
+	// Operating System Statistics
+	//  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
+
 }
 func main() {
 
