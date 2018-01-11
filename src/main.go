@@ -206,7 +206,7 @@ type OperatingSystemStatistics struct{
 	EndValue		float64
 }
 // Complete List of SQL Text
-type CompleteListOfSQLText struct{
+type CompleteListOfSQLText struct{// TODO перейти на map[string]string
 	SQLID		string
 	SQLText		string
 }
@@ -624,6 +624,8 @@ type PageData struct {
 	NonParseCPU 		string	// Instance Efficiency Percentages
 	ParseCPUElapsd 		string	// Parse CPU to Parse Elapsd %
 	SoftParse 			string	// Soft Parse % %
+	SharedPoolStatistics string	// Memory Usage %
+	SQLWithExecution string	// % SQL with executions>1
 	ListSQLText         []ListSQLText
 }
 // upload logic
@@ -804,6 +806,23 @@ func worker (filename string, dataStruct *PageData){
 	// Load Profile
 	// Top 10 Foreground Events by Total Wait Time
 	// Shared Pool Statistics
+	for _, iter := range work.ReportSummary.SharedPoolStatistics{
+		if iter.Name == "Memory Usage %"{
+			if (iter.Begin >= 75) && (iter.End <= 90){
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использование разделяемого пулан аходится в рамках %v - %v, что говорит о правильной работе базы данных", iter.Begin, iter.End)
+				continue
+			}
+			if (iter.Begin < 75) || (iter.End < 75){
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использования памяти слишком низкий - %v - %v. Память тратится напрасно.", iter.Begin, iter.End)
+				continue
+			}
+			if (iter.Begin > 90) ||(iter.End > 90){
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использования памяти слишком высокий - %v - %v. Происходит вытеснение компонентов разделяемого пула как устаревшийх файлов, что приводит к жесткому разбору (hard parse) SQL-операторов при их повторном выполнении.", iter.Begin, iter.End)
+				continue
+			}
+		}
+
+	}
 	// Operating System Statistics
 	//  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
 
