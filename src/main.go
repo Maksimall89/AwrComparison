@@ -617,7 +617,13 @@ type ListSQLText struct {
 	SQLDescribe string
 	SQLText		string
 }
-
+/*
+type Top10ForegroundEventsByTotalWaitTime struct {
+	Event 		string
+	Waits 		float64
+	WaitClass		string
+}
+*/
 type PageData struct {
 	PageTitle           string
 	AttributeUploadFile bool
@@ -627,6 +633,7 @@ type PageData struct {
 	SharedPoolStatistics string	// Memory Usage %
 	SQLWithExecution string	// % SQL with executions>1
 	ListSQLText         []ListSQLText
+	TopForegroundEventsByTotalWaitTime         []TopForegroundEventsByTotalWaitTime
 }
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
@@ -741,7 +748,6 @@ func worker (filename string, dataStruct *PageData){
 			}
 		}
 	}
-
 	for _, sqlText := range work.CompleteListOfSQLText {
 		attribute = true
 		// more like 10
@@ -779,49 +785,58 @@ func worker (filename string, dataStruct *PageData){
 			}
 		}
 	}
-
 	// Instance Efficiency Percentages (Target 100%)
 	for _, iter := range work.ReportSummary.InstanceEfficiencyPercentages{
 		if iter.Name == "% Non-Parse CPU"{
 			if iter.Value >= 90 {
-				dataStruct.NonParseCPU = fmt.Sprintf("Большинство ресурсов ЦП %v используется в различных операциях IO, почти отсутсвует парсинг(hard, soft, soft cursor cache hit), что говорит о правильной работе базы данных.",iter.Value)
+				dataStruct.NonParseCPU = fmt.Sprintf("Большинство ресурсов ЦП %v процентов используется в различных операциях IO, почти отсутсвует парсинг(hard, soft, soft cursor cache hit), что говорит о правильной работе базы данных.",iter.Value)
 			}else {
-				dataStruct.NonParseCPU = fmt.Sprintf("Большинство ресурсов ЦП %v тратится на парстинг.", iter.Value)
+				dataStruct.NonParseCPU = fmt.Sprintf("Большинство ресурсов ЦП %v процентов тратится на парстинг.", iter.Value)
 			}
 			continue
 		}
 		if iter.Name=="Parse CPU to Parse Elapsd %" {
 			if iter.Value >= 90{
-				dataStruct.ParseCPUElapsd = fmt.Sprintf("ЦП %v не ожидает ресурсов, что говорит о правильной работе базы данных.",iter.Value)
+				dataStruct.ParseCPUElapsd = fmt.Sprintf("ЦП %v процентов не ожидает ресурсов, что говорит о правильной работе базы данных.",iter.Value)
 			}else{
-				dataStruct.ParseCPUElapsd = fmt.Sprintf("Большинство ресурсов ЦП %v тратится на ожидание ресурсов.",iter.Value)
+				dataStruct.ParseCPUElapsd = fmt.Sprintf("Большинство ресурсов ЦП %v процентов тратится на ожидание ресурсов.",iter.Value)
 			}
 			continue
 		}
 		if iter.Name=="Soft Parse %" {
-			dataStruct.SoftParse = fmt.Sprintf("Вы используйте Soft Parse на уровне %%v. Если же вы делаете один Hard Parse, а затем последующие execute идут уже без парсинга, то данный показатель будет очень низкий. ",iter.Value)
+			dataStruct.SoftParse = fmt.Sprintf(`Вы используйте Soft Parse на уровне %v процентов. Если же вы делаете один Hard Parse, а затем последующие execute идут уже без парсинга, то данный показатель будет очень низкий.`,iter.Value)
 			continue
 		}
 	}
-	// Load Profile
-	// Top 10 Foreground Events by Total Wait Time
 	// Shared Pool Statistics
 	for _, iter := range work.ReportSummary.SharedPoolStatistics{
 		if iter.Name == "Memory Usage %"{
 			if (iter.Begin >= 75) && (iter.End <= 90){
-				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использование разделяемого пулан аходится в рамках %v - %v, что говорит о правильной работе базы данных", iter.Begin, iter.End)
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использование разделяемого пулан аходится в рамках %v - %v процентов, что говорит о правильной работе базы данных", iter.Begin, iter.End)
 				continue
 			}
 			if (iter.Begin < 75) || (iter.End < 75){
-				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использования памяти слишком низкий - %v - %v. Память тратится напрасно.", iter.Begin, iter.End)
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использования памяти слишком низкий - %v - %v процентов. Память тратится напрасно.", iter.Begin, iter.End)
 				continue
 			}
 			if (iter.Begin > 90) ||(iter.End > 90){
-				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использования памяти слишком высокий - %v - %v. Происходит вытеснение компонентов разделяемого пула как устаревшийх файлов, что приводит к жесткому разбору (hard parse) SQL-операторов при их повторном выполнении.", iter.Begin, iter.End)
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использования памяти слишком высокий - %v - %v процентов. Происходит вытеснение компонентов разделяемого пула как устаревшийх файлов, что приводит к жесткому разбору (hard parse) SQL-операторов при их повторном выполнении.", iter.Begin, iter.End)
 				continue
 			}
 		}
 	}
+	// Load Profile
+	// Top 10 Foreground Events by Total Wait Time
+	for _, sqlText := range  work.ReportSummary.Top10ForegroundEventsByTotalWaitTime{
+		dataStruct.TopForegroundEventsByTotalWaitTime = append(dataStruct.TopForegroundEventsByTotalWaitTime, TopForegroundEventsByTotalWaitTime{
+			Event:       sqlText.Event,
+			Waits: 			sqlText.Waits,
+			WaitClass:    sqlText.WaitClass,
+			PerDBTime:    sqlText.PerDBTime,
+			TotalWaitTime:    sqlText.TotalWaitTime,
+		} )
+	}
+
 	// Operating System Statistics
 	//  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
 
