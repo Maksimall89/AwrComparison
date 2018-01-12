@@ -821,7 +821,6 @@ func worker (filename string, dataStruct *PageData){
 				continue
 			}
 		}
-
 	}
 	// Operating System Statistics
 	//  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше

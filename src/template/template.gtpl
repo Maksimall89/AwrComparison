@@ -3,8 +3,15 @@
 <head>
     <title>Something here {{.PageTitle}}</title>
 </head>
-<body>
-<a name="top"></a>
+<body><a name="top"></a>
+
+<p>{{.NonParseCPU}}</p>
+<p>{{.ParseCPUElapsd}}</p>
+<p>{{.SoftParse}}</p>
+<p>{{.SharedPoolStatistics}}</p>
+<p>{{.}}</p>
+
+
 <p>Список SQLID тяжелых запросов:</p>
 <ul>
     {{range .ListSQLText}}
