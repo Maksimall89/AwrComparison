@@ -812,7 +812,7 @@ func worker (filename string, dataStruct *PageData){
 	for _, iter := range work.ReportSummary.SharedPoolStatistics{
 		if iter.Name == "Memory Usage %"{
 			if (iter.Begin >= 75) && (iter.End <= 90){
-				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использование разделяемого пулан аходится в рамках %v - %v процентов, что говорит о правильной работе базы данных", iter.Begin, iter.End)
+				dataStruct.SharedPoolStatistics = fmt.Sprintf("Процент использование разделяемого пулан находится в рамках %v - %v процентов, что говорит о правильной работе базы данных", iter.Begin, iter.End)
 				continue
 			}
 			if (iter.Begin < 75) || (iter.End < 75){
@@ -836,7 +836,6 @@ func worker (filename string, dataStruct *PageData){
 			TotalWaitTime:    sqlText.TotalWaitTime,
 		} )
 	}
-
 	// Operating System Statistics
 	//  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
 
