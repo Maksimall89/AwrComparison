@@ -37,6 +37,7 @@ type MainTable struct {
 	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
 	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
 	OperatingSystemStatistics	[]OperatingSystemStatistics
+	WaitEventsStatistics		WaitEventsStatistics
 	ReportSummary				ReportSummary
 }
 // Report Summary
@@ -52,6 +53,41 @@ type ReportSummary struct{
 	MemoryStatistics 						[]MemoryStatistics
 	CacheSizes 								[]CacheSizes
 	SharedPoolStatistics 					[]SharedPoolStatistics
+}
+// Wait Events Statistics
+type WaitEventsStatistics struct{
+	ForegroundWaitClass		[]ForegroundWaitClass
+	ForegroundWaitEvents	[]ForegroundWaitEvents
+	BackgroundWaitEvents	[]BackgroundWaitEvents
+}
+// Foreground Wait Class
+type ForegroundWaitClass struct {
+	WaitClass		string
+	Waits 			float64
+	PerTime			float64
+	TotalWaitTime	float64
+	AvgWait			float64
+	PerDBTime		float64
+}
+// Foreground Wait Events
+type ForegroundWaitEvents struct {
+	Event 			string
+	Waits 			float64
+	PerTime			float64
+	TotalWaitTime 	float64
+	AvgWait			float64
+	WaitsTxn		float64
+	PerDBTime		float64
+}
+// Background Wait Events
+type BackgroundWaitEvents struct {
+	Event 			string
+	Waits 			float64
+	PerTime			float64
+	TotalWaitTime 	float64
+	AvgWait			float64
+	WaitsTxn		float64
+	PerbgTime		float64
 }
 // Top ADDM Findings by Average Active Sessions
 type TopADDMFindingsByAverageActiveSessions struct{
@@ -258,6 +294,67 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				SQLText:  strArr[2],
 			})
 		}
+	}
+	if value, ok := maps["Foreground Wait Class"]; ok {
+		textBody =  strings.Split(value, `<tr><td scope="row" `)	// split line
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.WaitEventsStatistics.ForegroundWaitClass = append(conf.WaitEventsStatistics.ForegroundWaitClass, ForegroundWaitClass{
+				WaitClass : strArr[1],
+				Waits: fixDot(strArr[2]),
+				PerTime : fixDot(strArr[3]),
+				TotalWaitTime : fixDot(strArr[4]),
+				AvgWait : fixDot(strArr[5]),
+				PerDBTime : fixDot(strArr[6]),
+			})
+		}
+	}
+	if value, ok := maps["Foreground Wait Events"]; ok {
+		textBody =  strings.Split(value, `<tr><td scope="row" `)	// split line
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.WaitEventsStatistics.ForegroundWaitEvents = append(conf.WaitEventsStatistics.ForegroundWaitEvents, ForegroundWaitEvents{
+				Event : strArr[1],
+				Waits: fixDot(strArr[2]),
+				PerTime : fixDot(strArr[3]),
+				TotalWaitTime : fixDot(strArr[4]),
+				AvgWait : fixDot(strArr[5]),
+				WaitsTxn : fixDot(strArr[5]),
+				PerDBTime : fixDot(strArr[6]),
+			})
+		}
+	}
+	if value, ok := maps["Background Wait Events"]; ok {
+		textBody =  strings.Split(value, `<tr><td scope="row" `)	// split line
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.WaitEventsStatistics.BackgroundWaitEvents = append(conf.WaitEventsStatistics.BackgroundWaitEvents, BackgroundWaitEvents{
+				Event : strArr[1],
+				Waits: fixDot(strArr[2]),
+				PerTime : fixDot(strArr[3]),
+				TotalWaitTime : fixDot(strArr[4]),
+				AvgWait : fixDot(strArr[5]),
+				WaitsTxn : fixDot(strArr[5]),
+				PerbgTime : fixDot(strArr[6]),
+			})
+		}
+		/*
+			for _, xx := range conf.WaitEventsStatistics.BackgroundWaitEvents{
+				fmt.Println(xx.Event)
+			}
+		*/
 	}
 	if value, ok := maps["SQL ordered by Elapsed Time"]; ok {
 
@@ -606,34 +703,31 @@ func createMaps(textInput string, maps map[string]string) error{
 		}
 	}
 	if len(maps) == 0{
-		return errors.New("Not found elements map in the AWR")
+		return errors.New("Not found elements map in the AWR.")
 	}
 	return nil
 }
 
 // struct logic
+
+
+type PageData struct {
+	PageTitle           						string
+	AttributeUploadFile 						bool
+	NonParseCPU 								string	// Instance Efficiency Percentages
+	ParseCPUElapsd 								string	// Parse CPU to Parse Elapsd %
+	SoftParse 									string	// Soft Parse % %
+	SharedPoolStatistics 						string	// Memory Usage %
+	SQLWithExecution 							string	// % SQL with executions>1
+	WaitEventsStatistics						WaitEventsStatistics
+	ListSQLText         						[]ListSQLText
+	TopForegroundEventsByTotalWaitTime			[]TopForegroundEventsByTotalWaitTime
+}
+
 type ListSQLText struct {
 	SQLId 		string
 	SQLDescribe string
 	SQLText		string
-}
-/*
-type Top10ForegroundEventsByTotalWaitTime struct {
-	Event 		string
-	Waits 		float64
-	WaitClass		string
-}
-*/
-type PageData struct {
-	PageTitle           string
-	AttributeUploadFile bool
-	NonParseCPU 		string	// Instance Efficiency Percentages
-	ParseCPUElapsd 		string	// Parse CPU to Parse Elapsd %
-	SoftParse 			string	// Soft Parse % %
-	SharedPoolStatistics string	// Memory Usage %
-	SQLWithExecution string	// % SQL with executions>1
-	ListSQLText         []ListSQLText
-	TopForegroundEventsByTotalWaitTime         []TopForegroundEventsByTotalWaitTime
 }
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
@@ -713,6 +807,7 @@ func worker (filename string, dataStruct *PageData){
 
 	// TODO SQL ordered by Elapsed Time
 	// TODO SQL ordered by CPU Time
+	// TODO добавить информацию о системе - дата снятия метрик, информация о бд
 
 	// search TABLE ACCESS - STORAGE FULL
 	for _, sqlText := range work.TopSQLWithTopRowSources {
@@ -825,21 +920,54 @@ func worker (filename string, dataStruct *PageData){
 			}
 		}
 	}
-	// Load Profile
 	// Top 10 Foreground Events by Total Wait Time
 	for _, sqlText := range  work.ReportSummary.Top10ForegroundEventsByTotalWaitTime{
 		dataStruct.TopForegroundEventsByTotalWaitTime = append(dataStruct.TopForegroundEventsByTotalWaitTime, TopForegroundEventsByTotalWaitTime{
-			Event:       sqlText.Event,
+			Event:      	sqlText.Event,
 			Waits: 			sqlText.Waits,
-			WaitClass:    sqlText.WaitClass,
-			PerDBTime:    sqlText.PerDBTime,
-			TotalWaitTime:    sqlText.TotalWaitTime,
+			TotalWaitTime:  sqlText.TotalWaitTime,
+			WaitAvg:		sqlText.WaitAvg,
+			PerDBTime:    	sqlText.PerDBTime,
+			WaitClass:    	sqlText.WaitClass,
 		} )
 	}
-	// Operating System Statistics
-	//  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
+	// Foreground Wait Class
+	for _, sqlText := range work.WaitEventsStatistics.ForegroundWaitClass{
+		dataStruct.WaitEventsStatistics.ForegroundWaitClass = append(dataStruct.WaitEventsStatistics.ForegroundWaitClass, ForegroundWaitClass{
+		WaitClass:      		sqlText.WaitClass,
+		Waits: 					sqlText.Waits,
+		PerTime:    			sqlText.PerTime,
+		TotalWaitTime:			sqlText.TotalWaitTime,
+		AvgWait:    			sqlText.AvgWait,
+		PerDBTime:    			sqlText.PerDBTime,
+		} )
+	}
+	// Foreground Wait Events
+	for _, sqlText := range work.WaitEventsStatistics.ForegroundWaitEvents{
+		dataStruct.WaitEventsStatistics.ForegroundWaitEvents = append(dataStruct.WaitEventsStatistics.ForegroundWaitEvents, ForegroundWaitEvents{
+			Event:      			sqlText.Event,
+			Waits: 					sqlText.Waits,
+			PerTime:    			sqlText.PerTime,
+			TotalWaitTime:			sqlText.TotalWaitTime,
+			AvgWait:    			sqlText.AvgWait,
+			WaitsTxn:    			sqlText.WaitsTxn,
+			PerDBTime:    			sqlText.PerDBTime,
+		} )
+	}
+	// Background Wait Events
+	for _, sqlText := range work.WaitEventsStatistics.BackgroundWaitEvents{
+		dataStruct.WaitEventsStatistics.BackgroundWaitEvents = append(dataStruct.WaitEventsStatistics.BackgroundWaitEvents, BackgroundWaitEvents{
+			Event:      			sqlText.Event,
+			Waits: 					sqlText.Waits,
+			PerTime:    			sqlText.PerTime,
+			TotalWaitTime:			sqlText.TotalWaitTime,
+			AvgWait:    			sqlText.AvgWait,
+			WaitsTxn:    			sqlText.WaitsTxn,
+			PerbgTime:    			sqlText.PerbgTime,
+		} )
+	}
 
-}
+} //  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
 func main() {
 
 	// configurator for logger
