@@ -143,10 +143,10 @@
 
 <p><a href="#top">Наверх</a></p>
 <h2>Список SQLID тяжелых запросов, которые следует оптимизировать</h2>
-<p><b>Top SQL with Top Row Sources</b>TopSQLWithTopRowSources</p>
-<p><b>Top SQL with Top Events</b>TopSQLWithTopEvents</p>
-<p><b>SQL ordered by Elapsed Time</b>SQL ordered by Elapsed Time</p>
-<p><b>SQL ordered by CPU Time</b>SQL ordered by CPU Time</p>
+<p><b>Top SQL with Top Row Sources</b>  TopSQLWithTopRowSources</p>+
+<p><b>Top SQL with Top Events</b>   TopSQLWithTopEvents</p>+
+<p><b>SQL ordered by Elapsed Time</b>   SQLOrderByElapsedTime</p>+
+<p><b>SQL ordered by CPU Time</b>   SQLOrderedByCPUTime</p>+
 <ul>
     {{range .ListSQLText}}
         <li><a href="#{{.SQLId}}">{{.SQLId}}</a> — {{.SQLDescribe}};</li>

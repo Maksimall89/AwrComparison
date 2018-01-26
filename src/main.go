@@ -31,15 +31,41 @@ type Config struct {
 }
 type MainTable struct {
 	SQLOrderByElapsedTime      	[]SQLOrderByElapsedTime
-	CompleteListOfSQLText      	[]CompleteListOfSQLText
 	SQLOrderedByCPUTime        	[]SQLOrderedByCPUTime
 	SQLOrderedByUserIOWaitTime 	[]SQLOrderedByUserIOWaitTime
+	SQLOrderedByGets			[]SQLOrderedByGets
+	SQLOrderedByReads			[]SQLOrderedByReads
+	SQLOrderedByExecutions		[]SQLOrderedByExecutions
+	SQLOrderedByVersionCount	[]SQLOrderedByVersionCount
 	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
 	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
 	OperatingSystemStatistics	[]OperatingSystemStatistics
+	CompleteListOfSQLText      	[]CompleteListOfSQLText
+	BufferPoolStatistics		BufferPoolStatistics
 	WaitEventsStatistics		WaitEventsStatistics
 	ReportSummary				ReportSummary
 }
+// SQL ordered by Gets
+type SQLOrderedByGets struct{
+
+}
+// SQL ordered by Reads
+type SQLOrderedByReads struct{
+
+}
+// SQL ordered by Executions
+type SQLOrderedByExecutions struct{
+
+}
+// SQL ordered by Version Count
+type SQLOrderedByVersionCount struct{
+
+}
+// Buffer Pool Statistics
+type BufferPoolStatistics struct{
+
+}
+
 // Report Summary
 type ReportSummary struct{
 	TopADDMFindingsByAverageActiveSessions	[]TopADDMFindingsByAverageActiveSessions
@@ -720,8 +746,21 @@ type PageData struct {
 	SharedPoolStatistics 						string	// Memory Usage %
 	SQLWithExecution 							string	// % SQL with executions>1
 	WaitEventsStatistics						WaitEventsStatistics
+	BufferPoolStatistics						BufferPoolStatistics
 	ListSQLText         						[]ListSQLText
+
+	SQLOrderByElapsedTime      	[]SQLOrderByElapsedTime
+	SQLOrderedByCPUTime        	[]SQLOrderedByCPUTime
+	SQLOrderedByUserIOWaitTime 	[]SQLOrderedByUserIOWaitTime
+	SQLOrderedByGets			[]SQLOrderedByGets
+	SQLOrderedByReads			[]SQLOrderedByReads
+	SQLOrderedByExecutions		[]SQLOrderedByExecutions
+	SQLOrderedByVersionCount	[]SQLOrderedByVersionCount
+	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
+	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
 	TopForegroundEventsByTotalWaitTime			[]TopForegroundEventsByTotalWaitTime
+
+
 }
 
 type ListSQLText struct {
@@ -966,6 +1005,65 @@ func worker (filename string, dataStruct *PageData){
 			PerbgTime:    			sqlText.PerbgTime,
 		} )
 	}
+	// Top SQL with Top Row Sources
+	for _, sqlText := range work.TopSQLWithTopRowSources{
+		dataStruct.TopSQLWithTopRowSources = append(dataStruct.TopSQLWithTopRowSources, TopSQLWithTopRowSources{
+			SQLID:      			sqlText.SQLID,
+		PlanHash: 					sqlText.PlanHash,
+			Executions:    			sqlText.Executions,
+			Activity:			sqlText.Activity,
+			RowSource:    			sqlText.RowSource,
+			RowSourcePer:    			sqlText.RowSourcePer,
+			TopEvent:    			sqlText.TopEvent,
+			EventPer:    			sqlText.EventPer,
+			SQLText:    			sqlText.SQLText,
+		} )
+	}
+	// Top SQL with Top Events
+	for _, sqlText := range work.TopSQLWithTopEvents{
+		dataStruct.TopSQLWithTopEvents = append(dataStruct.TopSQLWithTopEvents, TopSQLWithTopEvents{
+			SQLID:      			sqlText.SQLID,
+			PlanHash: 					sqlText.PlanHash,
+			Executions:    			sqlText.Executions,
+			Activity:			sqlText.Activity,
+			RowSource:    			sqlText.RowSource,
+			RowSourcePer:    			sqlText.RowSourcePer,
+			Event:    			sqlText.Event,
+			EventPer:    			sqlText.EventPer,
+			ElapsedTime:    			sqlText.ElapsedTime,
+			SQLText:    			sqlText.SQLText,
+		} )
+	}
+	// SQL ordered by Elapsed Time	SQLOrderByElapsedTime
+	for _, sqlText := range work.SQLOrderByElapsedTime{
+		dataStruct.SQLOrderByElapsedTime = append(dataStruct.SQLOrderByElapsedTime, SQLOrderByElapsedTime{
+			ElapsedTime:      		sqlText.ElapsedTime,
+			Executions: 			sqlText.Executions,
+			ElapsedTimePerExec:    	sqlText.ElapsedTimePerExec,
+			Total:					sqlText.Total,
+			Cpu:    				sqlText.Cpu,
+			IO:    					sqlText.IO,
+			SQLID:    				sqlText.SQLID,
+			SQLModule:    			sqlText.SQLModule,
+			SQLText:    			sqlText.SQLText,
+		} )
+	}
+	// SQL ordered by CPU Time	SQLOrderedByCPUTime
+	for _, sqlText := range work.SQLOrderedByCPUTime{
+		dataStruct.SQLOrderedByCPUTime = append(dataStruct.SQLOrderedByCPUTime, SQLOrderedByCPUTime{
+			CPUTime:      			sqlText.CPUTime,
+			Executions: 			sqlText.Executions,
+			CPUPerExec:    			sqlText.CPUPerExec,
+			Total:					sqlText.Total,
+			ElapsedTime:    		sqlText.ElapsedTime,
+			CPU:    				sqlText.CPU,
+			IO:    					sqlText.IO,
+			SQLID:    				sqlText.SQLID,
+			SQLModule:    			sqlText.SQLModule,
+			SQLText:    			sqlText.SQLText,
+		} )
+	}
+
 
 } //  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
 func main() {
