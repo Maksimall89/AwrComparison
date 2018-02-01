@@ -47,7 +47,16 @@ type MainTable struct {
 }
 // SQL ordered by Gets
 type SQLOrderedByGets struct{
-
+	BufferGets 			float64
+	Executions			float64
+	GetsPerExec 		float64
+	Total				float64
+	ElapsedTime			float64
+	Cpu					float64
+	IO					float64
+	SQLID				string
+	SQLModule			string
+	SQLText				string
 }
 // SQL ordered by Reads
 type SQLOrderedByReads struct{
@@ -243,7 +252,6 @@ type TopSQLWithTopEvents struct{
 	Executions   float64
 	Activity     float64
 	Event        string
-	ElapsedTime  float64
 	EventPer     float64
 	RowSource    string
 	RowSourcePer float64
@@ -383,10 +391,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		*/
 	}
 	if value, ok := maps["SQL ordered by Elapsed Time"]; ok {
-
-		//textBody := regexp.MustCompile(`<tr><td align`).Split(value, -1)	// split line
 		textBody =  strings.Split(value, `<tr><td align="right" `)                     // split line
-		conf.SQLOrderByElapsedTime = make([]SQLOrderByElapsedTime, len(textBody) -1) // -1 because first line not contain information
 
 		for _, iter := range textBody{
 			strArr = regexp.MustCompile(`class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td scope="row" class='\w+'><a class="awr" href=".*?">(.*?)</a></td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
@@ -1008,30 +1013,29 @@ func worker (filename string, dataStruct *PageData){
 	// Top SQL with Top Row Sources
 	for _, sqlText := range work.TopSQLWithTopRowSources{
 		dataStruct.TopSQLWithTopRowSources = append(dataStruct.TopSQLWithTopRowSources, TopSQLWithTopRowSources{
-			SQLID:      			sqlText.SQLID,
-		PlanHash: 					sqlText.PlanHash,
-			Executions:    			sqlText.Executions,
+			SQLID:      		sqlText.SQLID,
+			PlanHash: 			sqlText.PlanHash,
+			Executions:    		sqlText.Executions,
 			Activity:			sqlText.Activity,
-			RowSource:    			sqlText.RowSource,
-			RowSourcePer:    			sqlText.RowSourcePer,
-			TopEvent:    			sqlText.TopEvent,
-			EventPer:    			sqlText.EventPer,
-			SQLText:    			sqlText.SQLText,
+			RowSource:    		sqlText.RowSource,
+			RowSourcePer:    	sqlText.RowSourcePer,
+			TopEvent:    		sqlText.TopEvent,
+			EventPer:    		sqlText.EventPer,
+			SQLText:    		sqlText.SQLText,
 		} )
 	}
 	// Top SQL with Top Events
 	for _, sqlText := range work.TopSQLWithTopEvents{
 		dataStruct.TopSQLWithTopEvents = append(dataStruct.TopSQLWithTopEvents, TopSQLWithTopEvents{
-			SQLID:      			sqlText.SQLID,
-			PlanHash: 					sqlText.PlanHash,
-			Executions:    			sqlText.Executions,
+			SQLID:      		sqlText.SQLID,
+			PlanHash: 			sqlText.PlanHash,
+			Executions:    		sqlText.Executions,
 			Activity:			sqlText.Activity,
-			RowSource:    			sqlText.RowSource,
-			RowSourcePer:    			sqlText.RowSourcePer,
+			RowSource:    		sqlText.RowSource,
+			RowSourcePer:    	sqlText.RowSourcePer,
 			Event:    			sqlText.Event,
-			EventPer:    			sqlText.EventPer,
-			ElapsedTime:    			sqlText.ElapsedTime,
-			SQLText:    			sqlText.SQLText,
+			EventPer:    		sqlText.EventPer,
+			SQLText:    		sqlText.SQLText,
 		} )
 	}
 	// SQL ordered by Elapsed Time	SQLOrderByElapsedTime
@@ -1063,7 +1067,6 @@ func worker (filename string, dataStruct *PageData){
 			SQLText:    			sqlText.SQLText,
 		} )
 	}
-
 
 } //  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
 func main() {
