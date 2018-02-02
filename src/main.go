@@ -306,7 +306,7 @@ func fixDot(str string) float64{
 	// convert type from string to float64
 	val, err := strconv.ParseFloat(str, 64)
 	if err != nil{
-		// log.Println(err) // TODO edit
+		log.Println(err) // TODO edit
 	}
 	return 	val
 }
@@ -849,8 +849,6 @@ func worker (filename string, dataStruct *PageData){
 	// fill in struct
 	parser(&work, maps)
 
-	// TODO SQL ordered by Elapsed Time
-	// TODO SQL ordered by CPU Time
 	// TODO добавить информацию о системе - дата снятия метрик, информация о бд
 
 	// search TABLE ACCESS - STORAGE FULL
