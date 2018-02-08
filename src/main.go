@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"html/template"
 	"io"
+	"flag"
 )
 
 const configFileName  = "config.json"
@@ -1093,11 +1094,15 @@ func main() {
 	configuration := Config{}
 	configuration.init()
 
-	log.Println("Start work.")
-
 	// start server
 	http.HandleFunc("/", upload) // setting router rule
-	err = http.ListenAndServe(":9090", nil) // setting listening port
+
+	port := flag.String("port", "9090", "the port value")
+	flag.Parse()
+
+	log.Printf("Start work. Port: %s", *port)
+
+	err = http.ListenAndServe(":" + *port, nil) // setting listening port
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
