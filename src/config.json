@@ -1,4 +1,8 @@
 {
-  "TelegramBotToken": "sdf",
-  "OwnName": "11"
+  "nameDB": "mydb",
+  "urlDB": "http://localhost:8086",
+  "username": "1",
+  "password": "2",
+  "measurement": "AWR_report",
+  "debug": "false"
 }

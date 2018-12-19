@@ -8,279 +8,21 @@ package main
 	https://studfiles.net/preview/2426969/page:12/
 */
 import (
-	"log"
-	"fmt"
-	"os"
-	"encoding/json"
-	"time"
 	"bufio"
-	"strings"
-	"regexp"
 	"errors"
-	"strconv"
-	"net/http"
+	"flag"
+	"fmt"
+	"github.com/influxdata/influxdb/client/v2"
 	"html/template"
 	"io"
-	"flag"
+	"log"
+	"net/http"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
-
-const configFileName  = "config.json"
-
-type Config struct {
-	TelegramBotToken string
-	OwnName          string
-}
-type MainTable struct {
-	SQLOrderByElapsedTime      	[]SQLOrderByElapsedTime
-	SQLOrderedByCPUTime        	[]SQLOrderedByCPUTime
-	SQLOrderedByUserIOWaitTime 	[]SQLOrderedByUserIOWaitTime
-	SQLOrderedByGets			[]SQLOrderedByGets
-	SQLOrderedByReads			[]SQLOrderedByReads
-	SQLOrderedByExecutions		[]SQLOrderedByExecutions
-	SQLOrderedByVersionCount	[]SQLOrderedByVersionCount
-	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
-	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
-	OperatingSystemStatistics	[]OperatingSystemStatistics
-	CompleteListOfSQLText      	[]CompleteListOfSQLText
-	BufferPoolStatistics		BufferPoolStatistics
-	WaitEventsStatistics		WaitEventsStatistics
-	ReportSummary				ReportSummary
-}
-// SQL ordered by Gets
-type SQLOrderedByGets struct{
-	BufferGets 			float64
-	Executions			float64
-	GetsPerExec 		float64
-	Total				float64
-	ElapsedTime			float64
-	Cpu					float64
-	IO					float64
-	SQLID				string
-	SQLModule			string
-	SQLText				string
-}
-// SQL ordered by Reads
-type SQLOrderedByReads struct{
-
-}
-// SQL ordered by Executions
-type SQLOrderedByExecutions struct{
-
-}
-// SQL ordered by Version Count
-type SQLOrderedByVersionCount struct{
-
-}
-// Buffer Pool Statistics
-type BufferPoolStatistics struct{
-
-}
-
-// Report Summary
-type ReportSummary struct{
-	TopADDMFindingsByAverageActiveSessions	[]TopADDMFindingsByAverageActiveSessions
-	LoadProfile								[]LoadProfile
-	InstanceEfficiencyPercentages			[]InstanceEfficiencyPercentages
-	Top10ForegroundEventsByTotalWaitTime	[]TopForegroundEventsByTotalWaitTime
-	WaitClassesByTotalWaitTime				[]WaitClassesByTotalWaitTime
-	HostCPU 								[]HostCPU
-	InstanceCPU 							[]InstanceCPU
-	IOProfile								[]IOProfile
-	MemoryStatistics 						[]MemoryStatistics
-	CacheSizes 								[]CacheSizes
-	SharedPoolStatistics 					[]SharedPoolStatistics
-}
-// Wait Events Statistics
-type WaitEventsStatistics struct{
-	ForegroundWaitClass		[]ForegroundWaitClass
-	ForegroundWaitEvents	[]ForegroundWaitEvents
-	BackgroundWaitEvents	[]BackgroundWaitEvents
-}
-// Foreground Wait Class
-type ForegroundWaitClass struct {
-	WaitClass		string
-	Waits 			float64
-	PerTime			float64
-	TotalWaitTime	float64
-	AvgWait			float64
-	PerDBTime		float64
-}
-// Foreground Wait Events
-type ForegroundWaitEvents struct {
-	Event 			string
-	Waits 			float64
-	PerTime			float64
-	TotalWaitTime 	float64
-	AvgWait			float64
-	WaitsTxn		float64
-	PerDBTime		float64
-}
-// Background Wait Events
-type BackgroundWaitEvents struct {
-	Event 			string
-	Waits 			float64
-	PerTime			float64
-	TotalWaitTime 	float64
-	AvgWait			float64
-	WaitsTxn		float64
-	PerbgTime		float64
-}
-// Top ADDM Findings by Average Active Sessions
-type TopADDMFindingsByAverageActiveSessions struct{
-	FindingName					string
-	AvgActiveSessionsTask		float64
-	PerActiveSessionsFinding	float64
-	TaskName					string
-	BeginSnapTime				string
-	EndSnapTime					string
-}
-// Load Profile
-type LoadProfile struct{
-	Name			string
-	PerSecond		float64
-	PerTransaction	float64
-	PerExec			float64
-	PerCall			float64
-}
-// Instance Efficiency Percentages (Target 100%)
-type InstanceEfficiencyPercentages struct{ // TODO перейти на map[string]float64
-	Name	string
-	Value	float64
-}
-//Top 10 Foreground Events by Total Wait Time
-type TopForegroundEventsByTotalWaitTime struct{
-	Event			string
-	Waits 			float64
-	TotalWaitTime 	float64
-	WaitAvg			float64
-	PerDBTime		float64
-	WaitClass		string
-}
-//Wait Classes by Total Wait Time
-type WaitClassesByTotalWaitTime struct{
-	WaitClass			string
-	Waits				float64
-	TotalWaitTime		float64
-	AvgWait				float64
-	PerDBTime			float64
-	AvgActiveSessions	float64
-}
-// Host CPU
-type HostCPU struct{
-	CPUs	float64
-	Cores	float64
-	Sockets	float64
-	LABegin	float64
-	LAEnd	float64
-	PerUser	float64
-	PerSystem	float64
-	PerWIO	float64
-	PerIDLE	float64
-}
-// Instance CPU
-type InstanceCPU struct{
-	PerTotalCPU				float64
-	PerBysuCPU				float64
-	PerDBTimeWaiting		float64
-}
-// IO Profile
-type IOProfile struct {
-	Name			string
-	RWPerSecond		float64
-	ReadPerSecond	float64
-	WritePerSecond	float64
-}
-// Memory Statistics
-type MemoryStatistics struct {
-	Name 	string
-	Begin	float64
-	End		float64
-}
-// Cache Sizes
-type CacheSizes struct {
-	Name 	string
-	Begin	float64
-	End	float64
-}
-// Shared Pool Statistics
-type SharedPoolStatistics struct {
-	Name	string
-	Begin	float64
-	End		float64
-}
-// SQL ordered by Elapsed Time
-type SQLOrderByElapsedTime struct{
-	ElapsedTime			float64
-	Executions			float64
-	ElapsedTimePerExec	float64
-	Total				float64
-	Cpu					float64
-	IO					float64
-	SQLID				string
-	SQLModule			string
-	SQLText				string
-}
-// SQL ordered by CPU Time
-type SQLOrderedByCPUTime struct{
-	CPUTime				float64
-	Executions			float64
-	CPUPerExec			float64
-	Total				float64
-	ElapsedTime			float64
-	CPU					float64
-	IO					float64
-	SQLID				string
-	SQLModule			string
-	SQLText				string
-}
-// SQL ordered by User I/O Wait Time
-type SQLOrderedByUserIOWaitTime struct{
-	UserIOTime			float64
-	Executions			float64
-	UIOPerExec			float64
-	Total				float64
-	ElapsedTime			float64
-	Cpu					float64
-	IO					float64
-	SQLID				string
-	SQLModule			string
-	SQLText				string
-}
-// Top SQL with Top Events
-type TopSQLWithTopEvents struct{
-	SQLID        string
-	PlanHash     float64
-	Executions   float64
-	Activity     float64
-	Event        string
-	EventPer     float64
-	RowSource    string
-	RowSourcePer float64
-	SQLText      string
-}
-// Top SQL with Top Row Sources
-type TopSQLWithTopRowSources struct{
-	SQLID				string
-	PlanHash			float64
-	Executions			float64
-	Activity			float64
-	RowSource			string
-	RowSourcePer		float64
-	TopEvent			string
-	EventPer			float64
-	SQLText				string
-}
-//Operating System Statistics
-type OperatingSystemStatistics struct{
-	Statistic		string
-	Value			float64
-	EndValue		float64
-}
-// Complete List of SQL Text
-type CompleteListOfSQLText struct{// TODO перейти на map[string]string
-	SQLID		string
-	SQLText		string
-}
 // reading text from a file
 func readFile(name string) (string, error)  {
 	var body string	// all text awr html
@@ -296,26 +38,118 @@ func readFile(name string) (string, error)  {
 	}
 	return body, nil
 }
-// TODO парсер лога и запись его в структуры
-
+// TODO доделать конвертацию даты в нормальный формат, чтобы дата в бд соотвествовала, TS когда сняли AWR отчёт.
+// Для этого надо разобраться с unix как переводить время из 11-Дек-17 20:30:47 в timeshamp
+func parseTimeStamp(utime string) (string, error) {
+	i, err := strconv.ParseInt(utime, 10, 64)
+	if err != nil {
+		return "", err
+	}
+	t := time.Unix(i, 0)
+	fmt.Println(t)
+	fmt.Println(time.Now())
+	fmt.Println(time.Now().Unix())
+	return t.Format(time.UnixDate), nil
+}
 func fixDot(str string) float64{
 	// replace , and .
+	// convert type from string to float64
+	if str == "&#160;"{
+		return 0
+	}
 	str = strings.Replace(str, ",", "", -1)
 	str = strings.Replace(str, " ", "", -1)
 	str = strings.Replace(str, "M", "048576", -1)	// TODO доделать умножение 1 048 576
 	str = strings.Replace(str, "K", "024", -1)	// 1024
-	// convert type from string to float64
+
 	val, err := strconv.ParseFloat(str, 64)
+
 	if err != nil{
-		log.Println(err) // TODO edit
+		log.Println(err)
 	}
 	return 	val
 }
+func compare(data *PageData, conf *Config){
+	var str string
+	counter := 0
+	for _, item  := range data.ListSQLText{
+		str = ""
+		for lineDB := range conf.Result[0].Series[0].Values{
+			if item.SQLId == conf.Result[0].Series[0].Values[lineDB][1]{
+				str += fmt.Sprintf("запрос встречался ранее в AWR за участок от %s до %s, ", conf.Result[0].Series[0].Values[lineDB][2], conf.Result[0].Series[0].Values[lineDB][3])
+			}
+		}
+		if str == "" {
+			data.ListSQLText[counter].TextUI = "запрос не встречался ранее"
+		}else{
+			data.ListSQLText[counter].TextUI = str
+		}
+		counter++
+		//fmt.Println(conf.Result[0].Series[0].Values[lineDB][1]) // sqlID - 1; datastart - 2; data stop -3
+	}
+}
 func parser(conf *MainTable, maps map[string]string) ()  {
 	var textBody []string	// text section
+	var textTable []string	// text section
 	var strArr []string	// text line
 	var i int	// count line
 
+	if value, ok := maps["Work Info"]; ok{
+		textTable = regexp.MustCompile(`<table border="0" `).Split(value, -1)	// split to table
+		// This table displays database instance information
+		textBody =  strings.Split(textTable[1], `<tr><td scope="row"`)// split line
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(` class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.WorkInfo.WIDatabaseInstanceInformation = append(conf.WorkInfo.WIDatabaseInstanceInformation, WIDatabaseInstanceInformation{
+				DBName : strArr[1],
+				DBId : fixDot(strArr[2]),
+				Instance : strArr[3],
+				Instnum : fixDot(strArr[4]),
+				StartupTime : strArr[5],
+				Release : strArr[6],
+				RAC : strArr[7],
+			})
+		}
+		// This table displays host information
+		textBody =  strings.Split(textTable[2], `<tr><td scope="row"`)// split line
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(` class='\w+'>(.*?)</td><td class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td><td align="right" class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.WorkInfo.WIHostInformation = append(conf.WorkInfo.WIHostInformation, WIHostInformation{
+				HostName : strArr[1],
+				Platform : strArr[2],
+				CPUs : fixDot(strArr[3]),
+				Cores : fixDot(strArr[4]),
+				Sockets : fixDot(strArr[5]),
+				MemoryGB : fixDot(strArr[6]),
+
+			})
+		}
+		// This table displays snapshot information
+		textBody =  strings.Split(textTable[3], `<tr><td scope="row"`)// split line
+		for _, iter := range textBody{
+			strArr = regexp.MustCompile(` class='\w+'>(.*?)</td><td[ align="right"]* class='\w+'>(.*?)</td><td[ align="center"]* class='\w+'>(.*?)</td><td[ align="right"]* class='\w+'>(.*?)</td><td[ align="right"]* class='\w+'>(.*?)</td></tr>`).FindStringSubmatch(iter) // select item from row
+			if len(strArr) == 0 {	// if we can't select to next line
+				continue
+			}
+			// fill in our struct
+			conf.WorkInfo.WISnapshotInformation = append(conf.WorkInfo.WISnapshotInformation, WISnapshotInformation{
+				Name : strArr[1],
+				SnapId : fixDot(strArr[2]),
+				SnapTime : strArr[3],
+				Sessions : fixDot(strArr[4]),
+				CursorsSession : fixDot(strArr[5]),
+			})
+		}
+	}
 	if value, ok := maps["Complete List of SQL Text"]; ok {
 		textBody = regexp.MustCompile(`<a class="awr" name=".+?"></a>`).Split(value, -1)	// split line
 		for _, iter := range textBody{
@@ -406,7 +240,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				Executions:  fixDot(strArr[2]),
 				ElapsedTimePerExec: fixDot(strArr[3]),
 				Total: fixDot(strArr[4]),
-				Cpu: fixDot(strArr[5]),
+				CPU: fixDot(strArr[5]),
 				IO: fixDot(strArr[6]),
 				SQLID: strArr[7],
 				SQLModule: strArr[8],
@@ -452,7 +286,7 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 				UIOPerExec : fixDot(strArr[3]),
 				Total : fixDot(strArr[4]),
 				ElapsedTime : fixDot(strArr[5]),
-				Cpu : fixDot(strArr[6]),
+				CPU : fixDot(strArr[6]),
 				IO : fixDot(strArr[7]),
 				SQLID : strArr[8],
 				SQLModule : strArr[9],
@@ -703,28 +537,6 @@ func parser(conf *MainTable, maps map[string]string) ()  {
 		}
 	}
 }
-func (conf *Config) init() {
-	//init configuration
-	configuration := Config{}
-	// open config-file
-	file, err := os.Open(configFileName)
-	defer file.Close()
-
-	if err != nil {
-		log.Println(err)
-		// default configuration
-		configuration.OwnName = "Maksimall89"
-		configuration.TelegramBotToken = "3257"
-	}else{
-
-		decoder := json.NewDecoder(file)
-		err = decoder.Decode(&configuration)
-		if err != nil {
-			log.Println(err)
-		}
-	}
-	return
-}
 // create maps with element
 func createMaps(textInput string, maps map[string]string) error{
 	textBody := strings.Split(textInput, `<h3 class="awr">`)
@@ -737,49 +549,16 @@ func createMaps(textInput string, maps map[string]string) error{
 	if len(maps) == 0{
 		return errors.New("Not found elements map in the AWR.")
 	}
+	// firts text about server
+	maps["Work Info"] = textBody[0]
 	return nil
-}
-
-// struct logic
-
-
-type PageData struct {
-	PageTitle           						string
-	AttributeUploadFile 						bool
-	NonParseCPU 								string	// Instance Efficiency Percentages
-	ParseCPUElapsd 								string	// Parse CPU to Parse Elapsd %
-	SoftParse 									string	// Soft Parse % %
-	SharedPoolStatistics 						string	// Memory Usage %
-	SQLWithExecution 							string	// % SQL with executions>1
-	WaitEventsStatistics						WaitEventsStatistics
-	BufferPoolStatistics						BufferPoolStatistics
-	ListSQLText         						[]ListSQLText
-
-	SQLOrderByElapsedTime      	[]SQLOrderByElapsedTime
-	SQLOrderedByCPUTime        	[]SQLOrderedByCPUTime
-	SQLOrderedByUserIOWaitTime 	[]SQLOrderedByUserIOWaitTime
-	SQLOrderedByGets			[]SQLOrderedByGets
-	SQLOrderedByReads			[]SQLOrderedByReads
-	SQLOrderedByExecutions		[]SQLOrderedByExecutions
-	SQLOrderedByVersionCount	[]SQLOrderedByVersionCount
-	TopSQLWithTopEvents        	[]TopSQLWithTopEvents
-	TopSQLWithTopRowSources    	[]TopSQLWithTopRowSources
-	TopForegroundEventsByTotalWaitTime			[]TopForegroundEventsByTotalWaitTime
-
-
-}
-
-type ListSQLText struct {
-	SQLId 		string
-	SQLDescribe string
-	SQLText		string
 }
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
 
 	var str string
 	data := PageData{}
-	data.PageTitle = "Test"
+
 
 	data.AttributeUploadFile = true
 
@@ -814,21 +593,46 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		defer os.Remove("upload/"+handler.Filename)	// delete file
 
 		io.Copy(f, file)
+		data.PageTitle = handler.Filename
 		log.Printf("File %s upload.", handler.Filename)
 
 	 	worker(str, &data)
 		log.Printf("File %s is processed.", handler.Filename)
 
 		//fmt.Fprintf(w,"%v", handler.Header)
+		// read config file
+		// Config influxdb
+		configuration := Config{}
+		configuration.Init()
 
+		// Create a new HTTPClient
+		configuration.Client, err = client.NewHTTPClient(client.HTTPConfig{
+			Addr:     configuration.UrlDB,
+			Username: configuration.Username,
+			Password: configuration.Password,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if configuration.Debug == "true" {
+			configuration.DeleteDB()
+			configuration.CreateDB()
+		}
+
+		SentDB(&configuration, &data)
+		log.Printf("File %s upload to DB %s.", handler.Filename, configuration.NameDB)
+		configuration.GetDB()
+		compare(&data, &configuration)
+		log.Printf("File %s processed.", handler.Filename)
+
+		// work with html
 		t := template.Must(template.ParseFiles("template/template.gtpl"))
 		t.Execute(w, data)  // merge.
 		log.Printf("File %s printed.", handler.Filename)
 	}
-
 	data = PageData{}	// TODO clear struct
 }
-
 func worker (filename string, dataStruct *PageData){
 
 	var attribute bool
@@ -1044,7 +848,7 @@ func worker (filename string, dataStruct *PageData){
 			Executions: 			sqlText.Executions,
 			ElapsedTimePerExec:    	sqlText.ElapsedTimePerExec,
 			Total:					sqlText.Total,
-			Cpu:    				sqlText.Cpu,
+			CPU:    				sqlText.CPU,
 			IO:    					sqlText.IO,
 			SQLID:    				sqlText.SQLID,
 			SQLModule:    			sqlText.SQLModule,
@@ -1066,8 +870,58 @@ func worker (filename string, dataStruct *PageData){
 			SQLText:    			sqlText.SQLText,
 		} )
 	}
+	// SQL ordered by Gets
+	for _, sqlText := range work.SQLOrderedByGets{
+		fmt.Println("sfdsf")
+		fmt.Println(sqlText.BufferGets)
+		dataStruct.SQLOrderedByGets = append(dataStruct.SQLOrderedByGets, SQLOrderedByGets{
+			BufferGets:      		sqlText.BufferGets,
+			Executions: 			sqlText.Executions,
+			GetsPerExec:    		sqlText.GetsPerExec,
+			Total:					sqlText.Total,
+			ElapsedTime:    		sqlText.ElapsedTime,
+			CPU:    				sqlText.CPU,
+			IO:    					sqlText.IO,
+			SQLID:    				sqlText.SQLID,
+			SQLModule:    			sqlText.SQLModule,
+			SQLText:    			sqlText.SQLText,
+		} )
+	}
+	// This table displays database instance information
+	for _, sqlText := range work.WorkInfo.WIDatabaseInstanceInformation{
+		dataStruct.WorkInfo.WIDatabaseInstanceInformation = append(dataStruct.WorkInfo.WIDatabaseInstanceInformation, WIDatabaseInstanceInformation{
+			DBName:      		sqlText.DBName,
+			DBId: 				sqlText.DBId,
+			Instance:    		sqlText.Instance,
+			Instnum:			sqlText.Instnum,
+			StartupTime:    	sqlText.StartupTime,
+			Release:    		sqlText.Release,
+			RAC:    			sqlText.RAC,
+		} )
+	}
+	// This table displays host information
+	for _, sqlText := range work.WorkInfo.WIHostInformation{
+		dataStruct.WorkInfo.WIHostInformation = append(dataStruct.WorkInfo.WIHostInformation, WIHostInformation{
+			HostName:      	sqlText.HostName,
+			Platform: 		sqlText.Platform,
+			CPUs:    		sqlText.CPUs,
+			Cores:			sqlText.Cores,
+			Sockets:    	sqlText.Sockets,
+			MemoryGB:    	sqlText.MemoryGB,
+		} )
+	}
+	// This table displays snapshot information
+	for _, sqlText := range work.WorkInfo.WISnapshotInformation{
+		dataStruct.WorkInfo.WISnapshotInformation = append(dataStruct.WorkInfo.WISnapshotInformation, WISnapshotInformation{
+			Name:      		sqlText.Name,
+			SnapId: 		sqlText.SnapId,
+			SnapTime:    	sqlText.SnapTime,
+			Sessions:		sqlText.Sessions,
+			CursorsSession: sqlText.CursorsSession,
+		} )
+	}
 
-} //  TODO хранить историю запросов в sqlLite и сравнивать стало ли лучше
+}
 func main() {
 
 	// configurator for logger
@@ -1090,9 +944,7 @@ func main() {
 	log.SetOutput(f) // TODO config logs
 	log.SetPrefix("AWRcompar ")
 
-	// read config file
-	configuration := Config{}
-	configuration.init()
+
 
 	// start server
 	http.HandleFunc("/", upload) // setting router rule
@@ -1101,12 +953,10 @@ func main() {
 	flag.Parse()
 
 	log.Printf("Start work. Port: %s", *port)
+	defer log.Println("Stop work.")
 
 	err = http.ListenAndServe(":" + *port, nil) // setting listening port
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-
-
-	log.Println("Stop work.")
 }

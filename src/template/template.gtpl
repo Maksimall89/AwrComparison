@@ -1,14 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Something here {{.PageTitle}}</title>
+    <title>Something {{.PageTitle}}</title>
 </head>
 <body><a name="top"></a>
 <h2>Общая информация</h2>
 <h3>Информация о системе</h3>
-<ul>
-    <li></li>
-</ul>
+<table class="table" border=1 bgcolor="#ffffff">
+  <thead>
+   <tr>
+      <th>Имя БД</th>
+      <th>ID БД</th>
+      <th>Экземпляр БД/th>
+      <th>Номер экземпляра</th>
+      <th>Время запуска экземпляра БД</th>
+      <th>Релиз</th>
+      <th>Кластер(RAC)</th>
+   </tr>
+  </thead>
+  <tbody>
+     {{range .WorkInfo.WIDatabaseInstanceInformation}}
+        <tr>
+            <td>{{.DBName}}</td>
+            <td>{{.DBId}}</td>
+            <td>{{.Instance}}</td>
+            <td>{{.Instnum}}</td>
+            <td>{{.StartupTime}}</td>
+            <td>{{.Release}}</td>
+            <td>{{.RAC}}</td>
+        </tr>
+      {{end}}
+  </tbody>
+</table>
+<br />
+<table class="table" border=1 bgcolor="#fffff0">
+  <thead>
+   <tr>
+      <th>Имя сервера</th>
+      <th>ОС сервера</th>
+      <th>Кол-во процессоров</th>
+      <th>Кол-во ядер</th>
+      <th>Гнезд</th>
+      <th>Объём ОП, ГБ</th>
+   </tr>
+  </thead>
+  <tbody>
+     {{range .WorkInfo.WIHostInformation}}
+        <tr>
+            <td>{{.HostName}}</td>
+            <td>{{.Platform}}</td>
+            <td>{{.CPUs}}</td>
+            <td>{{.Cores}}</td>
+            <td>{{.Sockets}}</td>
+            <td>{{.MemoryGB}}</td>
+        </tr>
+      {{end}}
+  </tbody>
+</table>
+<br />
+<table class="table" border=1 bgcolor="#fffff5">
+  <thead>
+   <tr>
+      <th>Параметр</th>
+      <th>ID snapshot</th>
+      <th>Время снятия snapshot</th>
+      <th>Сессии</th>
+      <th>Курсоры/сессии</th>
+   </tr>
+  </thead>
+  <tbody>
+     {{range .WorkInfo.WISnapshotInformation}}
+        <tr>
+            <td>{{.Name}}</td>
+            <td>{{.SnapId}}</td>
+            <td>{{.SnapTime}}</td>
+            <td>{{.Sessions}}</td>
+            <td>{{.CursorsSession}}</td>
+        </tr>
+      {{end}}
+  </tbody>
+</table>
 <h3>Instance Efficiency Percentages</h3>
 <p>{{.NonParseCPU}}</p>
 <p>{{.ParseCPUElapsd}}</p>
@@ -138,22 +209,57 @@
 <p><a href="#top">Наверх</a></p>
 
 <h2>Работа с блоками</h2>
-<p><b>SQL ordered by Gets</b> в этом разделе представленные запросы к БД упорядоченные по убыванию логических операций ввода/ввыода. При анализе стоит учитывать, что для PL/SQL процедур их количество прочитанных Buffer Gets будет состоять из суммы всех запросов в рамках данной процедуры. </p>
+<p><b><a href="#SQLOrderedByGets">SQL ordered by Gets</a></b> в этом разделе представленные запросы к БД упорядоченные по убыванию логических операций ввода/ввыода. При анализе стоит учитывать, что для PL/SQL процедур их количество прочитанных Buffer Gets будет состоять из суммы всех запросов в рамках данной процедуры. </p>
 <p><b>SQL ordered by Reads</b> данный раздел является схожим с предыдущим, в нём указываются все операции ввода/вывода наиболее активно физически считывающие данные с жёсткого диска. Именно на эти запросы и процессы надо обратить внимание, если система не справляется с объемом ввода/вывода. </p>
 <p><b>SQL ordered by Executions</b> наиболее часто выполняемы запросы.</p>
 <p><b>SQL ordered by Version Count</b> показано количество SQL-операторов экземпляров одного и того же оператора в разделяемом пуле. Появление дублей обусловлено: 1. Под разными пользователями выполняли один и тот же SQL-оператор, но обращался он к разным при этом таблицам. 2. Запрос исполнялся в другой среде. 3. Используется механизм тщательного контроля доступа (Fine Grained Access Control). 4.Клиент использует связываемые переменные разных типов или размеров: одна программа связывает запрос с текстовой строкой длиной 10 символов, а другая — со строкой длиной 20 символов. В результате тоже получается новая версия SQLоператора. </p>
 <p><b>Buffer Pool Statistics</b> Если используется поддержка нескольких буферных пулов, в этом разделе представляются данные по каждому из них. В нашем случае просто повторяется общая информация, представленная в начале отчета. </p>
 
+<p><a name="SQLOrderedByGets">SQL ordered by Gets</a></p>
+<table class="table" border=1 bgcolor="#02b12f">
+  <thead>
+   <tr>
+      <th>Buffer Gets </th>
+      <th>Executions</th>
+      <th>Gets per Exec</th>
+      <th>%Total</th>
+      <th>Elapsed Time (s)</th>
+      <th>%CPU</th>
+      <th>%IO</th>
+      <th>SQL Id</th>
+      <th>SQL Module</th>
+      <th>SQL Text</th>
+   </tr>
+  </thead>
+  <tbody>
+     {{range .SQLOrderedByGets}}
+        <tr>
+            <td>{{.BufferGets}}</td>
+            <td>{{.Executions}}</td>
+            <td>{{.GetsPerExec}}</td>
+            <td>{{.Total}}</td>
+            <td>{{.ElapsedTime}}</td>
+            <td>{{.Cpu}}</td>
+            <td>{{.IO}}</td>
+            <td><a href="#{{.SQLID}}">{{.SQLID}}</a></td>
+            <td>{{.SQLModule}}</td>
+            <td>{{.SQLText}}</td>
+        </tr>
+      {{end}}
+  </tbody>
+</table>
+
 <p><a href="#top">Наверх</a></p>
+
 <h2>Список SQLID тяжелых запросов, которые следует оптимизировать</h2>
 <p><b><a href="#TopSQLWithTopEvents">Top SQL with Top Events</a></b> — топ SQL запросов на которые приходится наибольший процент активности сесси и  больше всего ожидающие события порожденные этими операторами SQL. В столбце Sampled # of Executions показано, сколько выборочных исполнений конкретной инструкции SQL было выбрано. </p>
 <p><b><a href="#TopSQLWithTopRowSources">Top SQL with Top Row Sources</a></b> — топ SQL запросов на которые приходится наибольший процент выборочной активности сеанса и их подробная информация о плане выполнения. Вы можете использовать эту информацию, чтобы определить, какая часть выполнения SQL операторов значительно повлияла на затраченное время SQL оператора. </p>
 <p><b><a href="#SQLOrderByElapsedTime">SQL ordered by Elapsed Time</a></b> — топ SQL запросов по затраченному времени на их выполнение. Следует на них уделить большее внимание. </p>
 <p><b><a href="#SQLOrderedByCPUTime">SQL ordered by CPU Time</a></b> — топ Sql запросов по процессорному времени. Следует на них уделить большее внимание.</p>
-
+<p>Список того что нашли и то что было</p>
 <ul>
     {{range .ListSQLText}}
-        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> — {{.SQLDescribe}};</li>
+        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> — {{.SQLDescribe}}, {{.TextUI}};</li>
     {{end}}
 </ul></p>
 <p>Список запросов содержащих TABLE ACCESS - STORAGE FULL или запросы со множейством like или выборкой по всем столбцам с помощью "select * from".</p>
@@ -201,7 +307,7 @@
             <td>{{.Total}}</td>
             <td>{{.Cpu}}</td>
             <td>{{.IO}}</td>
-            <td>{{.SQLID}}</td>
+            <td><a href="#{{.SQLID}}">{{.SQLID}}</a></td>
             <td>{{.SQLModule}}</td>
             <td>{{.SQLText}}</td>
         </tr>
@@ -236,7 +342,7 @@
             <td>{{.ElapsedTime}}</td>
             <td>{{.CPU}}</td>
             <td>{{.IO}}</td>
-            <td>{{.SQLID}}</td>
+            <td><a href="#{{.SQLID}}">{{.SQLID}}</a></td>
             <td>{{.SQLModule}}</td>
             <td>{{.SQLText}}</td>
 
@@ -264,7 +370,7 @@
   <tbody>
      {{range .TopSQLWithTopEvents}}
         <tr>
-            <td>{{.SQLID}}</td>
+            <td><a href="#{{.SQLID}}">{{.SQLID}}</a></td>
             <td>{{.PlanHash}}</td>
             <td>{{.Executions}}</td>
             <td>{{.Activity}}</td>
@@ -297,7 +403,7 @@
   <tbody>
      {{range .TopSQLWithTopRowSources}}
         <tr>
-            <td>{{.SQLID}}</td>
+            <td><a href="#{{.SQLID}}">{{.SQLID}}</a></td>
             <td>{{.PlanHash}}</td>
             <td>{{.Executions}}</td>
             <td>{{.Activity}}</td>
