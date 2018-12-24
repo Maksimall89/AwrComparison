@@ -51,15 +51,6 @@ func SentDB(conf *Config, data *PageData)  {
 		fields["SQLId"] = line.SQLId
 		fields["SQLText"] = line.SQLText
 
-		// TODO Make real time
-		/*
-		times, err = strconv.ParseInt(line.SQLDescribe[0:10], 10, 64)
-		if err != nil {
-			panic(err)
-		}
-
-		*/
-
 		// Shift time and convert time
 		tm = time.Unix(time.Now().Unix(), 10000 + counter)
 
@@ -78,23 +69,16 @@ func SentDB(conf *Config, data *PageData)  {
 	if err := conf.Client.Write(bp); err != nil {
 		log.Fatal(err)
 	}
-
-	log.Printf("Date upload in DB %s, measurement %s.", data.WorkInfo.WIHostInformation[0].HostName, conf.NameDB, conf.Measurement)
 }
 
-// TODO select
-func (conf *Config) GetDB() {
+func GetDBinfo(conf *Config, SQLiD string)  {
+
 	var err error
-	conf.Result, err = QueryDB(conf, fmt.Sprintf(`SELECT SQLId, DateStart, DateStop FROM %s`, conf.Measurement))
+
+	conf.Results, err = QueryDB(conf, fmt.Sprintf(`SELECT * FROM %s WHERE SQLId = '%s'`, conf.Measurement, SQLiD))
 	if err != nil {
 		log.Fatal(err)
 	}
-/*
-	for x, _ := range conf.Result[0].Series[0].Values{
-		fmt.Println(conf.Result[0].Series[0].Values[x][1]) // sqlID - 1; datastart - 2; data stop -3
-	}
-*/
-	log.Printf("Data from %s.%s get", conf.NameDB, conf.Measurement)
 }
 
 func QueryDB(conf *Config, cmd string) (res []client.Result, err error) {

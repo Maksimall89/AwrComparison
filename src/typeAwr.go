@@ -328,5 +328,5 @@ type Config struct {
 	Measurement string
 	Debug       string
 	Client      client.Client
-	Result      []client.Result
+	Results 	[]client.Result
 }

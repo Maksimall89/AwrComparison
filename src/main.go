@@ -38,6 +38,7 @@ func readFile(name string) (string, error)  {
 	}
 	return body, nil
 }
+
 // TODO доделать конвертацию даты в нормальный формат, чтобы дата в бд соотвествовала, TS когда сняли AWR отчёт.
 // Для этого надо разобраться с unix как переводить время из 11-Дек-17 20:30:47 в timeshamp
 func parseTimeStamp(utime string) (string, error) {
@@ -51,6 +52,8 @@ func parseTimeStamp(utime string) (string, error) {
 	fmt.Println(time.Now().Unix())
 	return t.Format(time.UnixDate), nil
 }
+
+
 func fixDot(str string) float64{
 	// replace , and .
 	// convert type from string to float64
@@ -69,23 +72,27 @@ func fixDot(str string) float64{
 	}
 	return 	val
 }
+
 func compare(data *PageData, conf *Config){
 	var str string
 	counter := 0
 	for _, item  := range data.ListSQLText{
+
 		str = ""
-		for lineDB := range conf.Result[0].Series[0].Values{
-			if item.SQLId == conf.Result[0].Series[0].Values[lineDB][1]{
-				str += fmt.Sprintf("запрос встречался ранее в AWR за участок от %s до %s, ", conf.Result[0].Series[0].Values[lineDB][2], conf.Result[0].Series[0].Values[lineDB][3])
-			}
+
+		GetDBinfo(conf, item.SQLId)
+
+		for x, pair := range conf.Results[0].Series{
+			str += fmt.Sprintf("запрос встречался ранее в AWR за участок от %s до %s, ",pair.Values[x][1], pair.Values[x][1])
 		}
+
 		if str == "" {
 			data.ListSQLText[counter].TextUI = "запрос не встречался ранее"
-		}else{
+		}else {
 			data.ListSQLText[counter].TextUI = str
 		}
+
 		counter++
-		//fmt.Println(conf.Result[0].Series[0].Values[lineDB][1]) // sqlID - 1; datastart - 2; data stop -3
 	}
 }
 func parser(conf *MainTable, maps map[string]string) ()  {
@@ -599,8 +606,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	 	worker(str, &data)
 		log.Printf("File %s is processed.", handler.Filename)
 
-		//fmt.Fprintf(w,"%v", handler.Header)
-		// read config file
+			// read config file
 		// Config influxdb
 		configuration := Config{}
 		configuration.Init()
@@ -622,9 +628,9 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 		SentDB(&configuration, &data)
 		log.Printf("File %s upload to DB %s.", handler.Filename, configuration.NameDB)
-		configuration.GetDB()
+
 		compare(&data, &configuration)
-		log.Printf("File %s processed.", handler.Filename)
+		//log.Printf("File %s processed.", handler.Filename)
 
 		// work with html
 		t := template.Must(template.ParseFiles("template/template.gtpl"))
@@ -943,8 +949,6 @@ func main() {
 	// assign it to the standard logger
 	log.SetOutput(f) // TODO config logs
 	log.SetPrefix("AWRcompar ")
-
-
 
 	// start server
 	http.HandleFunc("/", upload) // setting router rule
