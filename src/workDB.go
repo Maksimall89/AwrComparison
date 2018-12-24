@@ -23,8 +23,9 @@ func (conf *Config) Init() {
 	}
 
 }
+
 // sent data to DB
-func SentDB(conf *Config, data *PageData)  {
+func SentDB(conf *Config, data *PageData) {
 	// Create a new point batch
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: conf.NameDB,
@@ -52,7 +53,7 @@ func SentDB(conf *Config, data *PageData)  {
 		fields["SQLText"] = line.SQLText
 
 		// Shift time and convert time
-		tm = time.Unix(time.Now().Unix(), 10000 + counter)
+		tm = time.Unix(time.Now().Unix(), 10000+counter)
 
 		// Create string on db
 		pt, err := client.NewPoint(conf.Measurement, tags, fields, tm)
@@ -71,7 +72,7 @@ func SentDB(conf *Config, data *PageData)  {
 	}
 }
 
-func GetDBinfo(conf *Config, SQLiD string)  {
+func GetDBinfo(conf *Config, SQLiD string) {
 
 	var err error
 
