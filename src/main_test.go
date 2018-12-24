@@ -54,3 +54,24 @@ func TestCreateMaps(t *testing.T) {
 		)
 	}
 }
+
+func TestFixDot(t *testing.T) {
+
+	mapsGood := make(map[string]float64)
+	mapsGood["10M"] = 10048576
+	mapsGood["10K"] = 10024
+	mapsGood["10,5"] = 105
+	mapsGood["10 7"] = 107
+	mapsGood["&#160;"] = 0
+
+	for input, output := range mapsGood {
+		v := fixDot(input)
+		if v != output {
+			t.Error(
+				"For", input,
+				"\n expected:", output,
+				"\n got text:", v,
+				)
+		}
+	}
+}
