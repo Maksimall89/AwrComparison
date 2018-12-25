@@ -85,7 +85,7 @@ func compare(data *PageData, conf *Config) {
 		GetDBinfo(conf, item.SQLId)
 
 		for x, pair := range conf.Results[0].Series {
-			str += fmt.Sprintf("запрос встречался ранее в AWR за участок от %s до %s, ", pair.Values[x][1], pair.Values[x][1])
+			str += fmt.Sprintf("запрос встречался ранее в AWR за участок от %s до %s, ", pair.Values[x][1], pair.Values[x][2])
 		}
 
 		if str == "" {

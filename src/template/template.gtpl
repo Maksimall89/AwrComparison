@@ -259,7 +259,7 @@
 <p>Список того что нашли и то что было</p>
 <ul>
     {{range .ListSQLText}}
-        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> — {{.SQLDescribe}}, {{.TextUI}};</li>
+        <li><a href="#{{.SQLId}}">{{.SQLId}}</a> — {{.SQLDescribe}}, <i>{{.TextUI}} </i>;</li>
     {{end}}
 </ul></p>
 <p>Список запросов содержащих TABLE ACCESS - STORAGE FULL или запросы со множейством like или выборкой по всем столбцам с помощью "select * from".</p>
